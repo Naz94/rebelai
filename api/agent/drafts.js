@@ -1,16 +1,9 @@
-// ============================================================
-// REBEL ENGINE — Drafts Queue API (api/agent/drafts.js)
-// GET → returns all drafts for dashboard display
-// ============================================================
-
+// api/agent/drafts.js
 import { getAllDrafts } from "../../lib/drafts.js";
 
 export default async function handler(req, res) {
-  const secret = req.headers["x-agent-secret"];
-  if (secret !== process.env.CRON_SECRET && process.env.NODE_ENV !== "development") {
-    return res.status(401).json({ error: "Unauthorised" });
-  }
-
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const drafts  = await getAllDrafts();
