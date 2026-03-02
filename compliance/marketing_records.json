@@ -1,0 +1,86 @@
+{
+  "paia": {
+    "section": "51",
+    "document_type": "PAIA Information Manual — Automated Marketing System",
+    "responsible_party": "Rebel Designs",
+    "contact": "rebeldesigns.co.za",
+    "location": "Johannesburg, South Africa",
+    "description": "Technical record of all automated marketing content generation and publication activities by the Rebel Designs Content Engine."
+  },
+  "popia": {
+    "responsible_party": "Rebel Designs",
+    "lawful_basis": "Legitimate interest — automated marketing activity for own brand promotion.",
+    "data_categories_processed": "NONE — this system processes no personal information.",
+    "data_subjects": "NONE — no personal information collected, stored, or transmitted.",
+    "third_party_operators": [
+      {
+        "operator": "Anthropic PBC",
+        "service": "Claude AI — content generation",
+        "data_sent": "Brand configuration prompts only. No personal information."
+      },
+      {
+        "operator": "OpenAI LLC",
+        "service": "DALL-E 3 — image generation",
+        "data_sent": "Brand configuration prompts only. No personal information."
+      },
+      {
+        "operator": "Meta Platforms Inc.",
+        "service": "Facebook + Instagram Graph API",
+        "data_sent": "Generated post content and images only. No personal information."
+      },
+      {
+        "operator": "Upstash Inc.",
+        "service": "Redis — operational data storage",
+        "data_sent": "Post metadata only. No personal information."
+      },
+      {
+        "operator": "Vercel Inc.",
+        "service": "Serverless hosting and cron execution",
+        "data_sent": "Function execution logs only. No personal information."
+      }
+    ],
+    "retention_period": "Records retained for 5 years from date of creation."
+  },
+  "engine": "Rebel Designs Content Engine v3",
+  "generated": "2026-03-02T10:12:48.912Z",
+  "records": [
+    {
+      "record_id": "RD-1772446654845",
+      "draft_id": "draft_1772446688157_7jxnr",
+      "timestamp": "2026-03-02T10:18:08.457Z",
+      "engine_v": "3.0.0",
+      "paia_section": "51",
+      "activity_type": "Automated Marketing Content Generation and Publication",
+      "trigger": "automated_cron",
+      "popia": {
+        "lawful_basis": "Legitimate interest — own brand marketing",
+        "personal_data_processed": false,
+        "pii_scan_passed": true,
+        "pii_scan_flags": [],
+        "data_subjects_affected": 0
+      },
+      "activity": {
+        "rotation": "Modern CSS & Design Systems",
+        "rotation_id": "value_css",
+        "topic": "Design system flexibility through clear component APIs and design token use.",
+        "platforms": [
+          "facebook",
+          "instagram"
+        ],
+        "visual_type": "static",
+        "visual_style": "static-extreme-closeup",
+        "status": "DRAFT_SAVED",
+        "platform_results": null,
+        "post_history_count": 0
+      },
+      "negative_certifications": [
+        "No personal information collected from any data subject",
+        "No personal information transmitted to any third-party operator",
+        "No profiling of individuals conducted",
+        "No automated decisions affecting data subjects made"
+      ]
+    }
+  ],
+  "last_updated": "2026-03-02T10:18:08.524Z",
+  "total_records": 1
+}
