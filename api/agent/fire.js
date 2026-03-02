@@ -1,10 +1,5 @@
 // ============================================================
-// REBEL ENGINE — Main Agent (api/agent/fire.js)
-//
-// Generates copy + visual, saves draft. Does NOT post.
-// Dashboard approve button calls /api/agent/publish.
-//
-// Cron: Tue + Fri 06:00 UTC ("0 6 * * 2,5")
+// REBEL AI — Main Agent (api/agent/fire.js)
 // ============================================================
 
 import { getPostedTopics, saveLastRun }  from "../../lib/kv.js";
@@ -25,15 +20,14 @@ export default async function handler(req, res) {
   }
 
   const secret = req.headers["x-vercel-cron-secret"] ?? req.headers["x-agent-secret"];
-  if (secret !== process.env.CRON_SECRET && process.env.NODE_ENV !== "development") {
+  if (secret !== process.env.CRON_SECRET) {
     return res.status(401).json({ error: "Unauthorised" });
   }
 
   const runId = `RD-${Date.now()}`;
-  console.log(`[${runId}] Agent firing — generating draft...`);
+  console.log(`[${runId}] Agent firing...`);
 
   try {
-    // 1. Load everything in parallel
     const [postHistory, resourceSnapshot, rotationWeights, intelligenceBrief] = await Promise.all([
       getPostedTopics(),
       fetchResourceSnapshot(),
@@ -41,28 +35,23 @@ export default async function handler(req, res) {
       getIntelligenceBrief(),
     ]);
 
-    // 2. Pick best rotation (weighted 70/30 value/lab split)
     const rotation = getWeightedRotation(rotationWeights);
     console.log(`[${runId}] Rotation: ${rotation.name} (${rotation.type})`);
 
-    // 3. Generate copy for both platforms
     const [facebookCopy, instagramCopy] = await Promise.all([
       generateCopy(rotation, "facebook",  resourceSnapshot, postHistory, intelligenceBrief),
       generateCopy(rotation, "instagram", resourceSnapshot, postHistory, intelligenceBrief),
     ]);
 
-    // 4. Extract topic + generate visual in parallel
     const [topic, visual] = await Promise.all([
       extractTopic(facebookCopy),
       generateVisual(rotation),
     ]);
-    console.log(`[${runId}] Visual: ${visual.type} — ${visual.styleUsed}`);
 
-    // 5. Save draft — status: pending. Nothing posts yet.
     const draft = await saveDraft({
       runId,
-      rotation:   rotation.name,
-      rotationId: rotation.id,
+      rotation:    rotation.name,
+      rotationId:  rotation.id,
       rotationType: rotation.type,
       topic,
       copy: {
@@ -72,30 +61,14 @@ export default async function handler(req, res) {
       visual: {
         type:      visual.type,
         styleUsed: visual.styleUsed,
-        imageUrl:  visual.imageUrl  ?? null,
-        buffer:    visual.type === "animated"
-                     ? visual.buffer.toString("base64")
-                     : null,
+        imageUrl:  visual.imageUrl ?? null,
         mimeType:  visual.mimeType ?? "image/png",
       },
       status:    "pending",
       createdAt: new Date().toISOString(),
     });
 
-    console.log(`[${runId}] Draft saved — ID: ${draft.id}`);
-
-    // 6. Audit log
-    await appendAuditLog({
-      id:          runId,
-      draftId:     draft.id,
-      rotation:    rotation.name,
-      rotationId:  rotation.id,
-      topic,
-      status:      "DRAFT_SAVED",
-      visualType:  visual.type,
-      visualStyle: visual.styleUsed,
-      historyCount: postHistory.length,
-    });
+    console.log(`[${runId}] Draft saved — ID: ${draft.id} — status: ${draft.status}`);
 
     await saveLastRun({ runId, rotation: rotation.name, topic, status: "DRAFT_SAVED" });
 
@@ -106,7 +79,7 @@ export default async function handler(req, res) {
       topic,
       rotation: rotation.name,
       rotationType: rotation.type,
-      message: "Draft saved. Open /admin to review and approve.",
+      message: "Draft saved. Open Review Queue to approve.",
     });
 
   } catch (err) {
