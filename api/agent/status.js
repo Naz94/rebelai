@@ -11,11 +11,11 @@ export default async function handler(req, res) {
   }
 
   const [lastRun, published, scores, leads, pending] = await Promise.all([
-    redis.get("rebel:last_run"),
-    redis.get("rebel:published_posts"),
-    redis.hgetall("rebel:post_scores"),
-    redis.get("rebel:leads"),
-    redis.get("rebel:pending_replies"),
+    redis.get("rebelai:last_run"),
+    redis.get("rebelai:published_posts"),
+    redis.hgetall("rebelai:post_scores"),
+    redis.get("rebelai:leads"),
+    redis.get("rebelai:pending_replies"),
   ]);
 
   const scoreValues = scores ? Object.values(scores).map(s => s.score ?? 0) : [];
