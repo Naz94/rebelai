@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       getPostedTopics(),
       fetchResourceSnapshot(),
       getIntelligenceBrief(),
-    ]);
+       ]);
     const [facebookCopy, instagramCopy] = await Promise.all([
       generateCopy(rotation, "facebook",  resourceSnapshot, postHistory, intelligenceBrief),
       generateCopy(rotation, "instagram", resourceSnapshot, postHistory, intelligenceBrief),
@@ -56,9 +56,6 @@ export default async function handler(req, res) {
     });
     return res.status(200).json({ success: true, draftId: newDraft.id, topic });
   }
-
-  return res.status(400).json({ error: "Unknown action" });
-}
 
   return res.status(400).json({ error: "Unknown action" });
 }
