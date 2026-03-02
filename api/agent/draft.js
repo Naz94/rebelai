@@ -1,21 +1,51 @@
-// ============================================================
-// REBEL AI — Drafts Queue API (api/agent/drafts.js)
-// ============================================================
+// api/agent/draft.js
+import { getDraft, updateDraft, saveDraft } from "../../lib/drafts.js";
+import { generateCopy, extractTopic }       from "../../lib/generate.js";
+import { ROTATIONS }                        from "../../lib/rotations.js";
+import { getPostedTopics }                  from "../../lib/kv.js";
+import { fetchResourceSnapshot }            from "../../lib/resources.js";
+import { getIntelligenceBrief }             from "../../lib/trends.js";
 
-import { getAllDrafts } from "../../lib/drafts.js";
+export const maxDuration = 30;
 
 export default async function handler(req, res) {
-  const secret = req.headers["x-agent-secret"];
-  if (secret !== process.env.CRON_SECRET) {
-    return res.status(401).json({ error: "Unauthorised" });
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const { draftId, action } = req.body ?? {};
+  if (!draftId || !action) return res.status(400).json({ error: "draftId and action required" });
+
+  const draft = await getDraft(draftId);
+  if (!draft) return res.status(404).json({ error: "Draft not found" });
+
+  if (action === "reject") {
+    await updateDraft(draftId, { status: "rejected" });
+    return res.status(200).json({ success: true });
   }
 
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  if (action === "regenerate") {
+    const rotation = ROTATIONS.find(r => r.id === draft.rotationId) ?? ROTATIONS[0];
+    const [postHistory, resourceSnapshot, intelligenceBrief] = await Promise.all([
+      getPostedTopics(),
+      fetchResourceSnapshot(),
+      getIntelligenceBrief(),
+    ]);
+    const [facebookCopy, instagramCopy] = await Promise.all([
+      generateCopy(rotation, "facebook",  resourceSnapshot, postHistory, intelligenceBrief),
+      generateCopy(rotation, "instagram", resourceSnapshot, postHistory, intelligenceBrief),
+    ]);
+    const topic = await extractTopic(facebookCopy);
+    await updateDraft(draftId, { status: "regenerated" });
+    const newDraft = await saveDraft({
+      ...draft,
+      topic,
+      copy: { facebook: facebookCopy, instagram: instagramCopy },
+      status:    "pending",
+      createdAt: new Date().toISOString(),
+    });
+    return res.status(200).json({ success: true, draftId: newDraft.id, topic });
+  }
 
-  const drafts  = await getAllDrafts();
-  const pending = drafts.filter(d => d.status === "pending").length;
-
-  console.log(`[drafts API] Found ${drafts.length} total, ${pending} pending`);
-
-  return res.status(200).json({ drafts, pending });
+  return res.status(400).json({ error: "Unknown action" });
 }
