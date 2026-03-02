@@ -1,4 +1,10 @@
 {
+  "routes": [
+    {
+      "src": "/admin",
+      "dest": "/public/index.html"
+    }
+  ],
   "crons": [
     {
       "path": "/api/agent/fire",
