@@ -7,15 +7,22 @@ import { fetchResourceSnapshot }         from "../../lib/resources.js";
 import { getRotationWeights }            from "../../lib/performance.js";
 import { getIntelligenceBrief }          from "../../lib/trends.js";
 import { saveDraft }                     from "../../lib/drafts.js";
+import { requireAuth }                   from "../../lib/auth.js";
 
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-agent-secret");
 
-  if (req.method !== "POST") {
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  // Allow Vercel cron (GET with x-vercel-cron header) OR authenticated POST
+  const isCron = req.method === "GET" && req.headers["x-vercel-cron"];
+  if (!isCron && req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+  if (!isCron && !requireAuth(req, res)) return;
 
   const runId = `RD-${Date.now()}`;
 
@@ -59,11 +66,12 @@ export default async function handler(req, res) {
     await saveLastRun({ runId, rotation: rotation.name, topic, status: "DRAFT_SAVED" });
 
     return res.status(200).json({
-      success: true,
+      success:      true,
       runId,
-      draftId:  draft.id,
-      status:   draft.status,
+      draftId:      draft.id,
+      status:       draft.status,
       topic,
+      rotationType: rotation.type,   // FIX: was missing — toast showed empty brackets
     });
 
   } catch (err) {
