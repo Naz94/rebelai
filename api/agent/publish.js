@@ -3,13 +3,17 @@ import { getDraft, updateDraft }    from "../../lib/drafts.js";
 import { postToAllPlatforms }       from "../../lib/post.js";
 import { registerPublishedPost }    from "../../lib/performance.js";
 import { savePostedTopic }          from "../../lib/kv.js";
+import { requireAuth }              from "../../lib/auth.js";
 
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-agent-secret");
 
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST")    return res.status(405).json({ error: "Method not allowed" });
+  if (!requireAuth(req, res))   return;
 
   const { draftId } = req.body ?? {};
   if (!draftId) return res.status(400).json({ error: "draftId required" });
