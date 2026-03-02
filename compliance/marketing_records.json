@@ -79,8 +79,44 @@
         "No profiling of individuals conducted",
         "No automated decisions affecting data subjects made"
       ]
+    },
+    {
+      "record_id": "RD-1772447178812",
+      "draft_id": "draft_1772447205800_dbn50",
+      "timestamp": "2026-03-02T10:26:46.100Z",
+      "engine_v": "3.0.0",
+      "paia_section": "51",
+      "activity_type": "Automated Marketing Content Generation and Publication",
+      "trigger": "automated_cron",
+      "popia": {
+        "lawful_basis": "Legitimate interest — own brand marketing",
+        "personal_data_processed": false,
+        "pii_scan_passed": true,
+        "pii_scan_flags": [],
+        "data_subjects_affected": 0
+      },
+      "activity": {
+        "rotation": "React Architecture",
+        "rotation_id": "value_react",
+        "topic": "Evaluating state management choices: useState vs. useReducer and context API.",
+        "platforms": [
+          "facebook",
+          "instagram"
+        ],
+        "visual_type": "static",
+        "visual_style": "static-motion-blur-still",
+        "status": "DRAFT_SAVED",
+        "platform_results": null,
+        "post_history_count": 0
+      },
+      "negative_certifications": [
+        "No personal information collected from any data subject",
+        "No personal information transmitted to any third-party operator",
+        "No profiling of individuals conducted",
+        "No automated decisions affecting data subjects made"
+      ]
     }
   ],
-  "last_updated": "2026-03-02T10:18:08.524Z",
-  "total_records": 1
+  "last_updated": "2026-03-02T10:26:46.189Z",
+  "total_records": 2
 }
