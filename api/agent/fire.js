@@ -37,9 +37,10 @@ export default async function handler(req, res) {
       generateCopy(rotation, "instagram", resourceSnapshot, postHistory, intelligenceBrief),
     ]);
 
+    // Pass the actual post copy so the image reflects the content
     const [topic, visual] = await Promise.all([
       extractTopic(facebookCopy),
-      generateVisual(rotation),
+      generateVisual(rotation, facebookCopy),
     ]);
 
     const draft = await saveDraft({
