@@ -48,6 +48,7 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 
 .stitle{font-family:var(--mono);font-size:10px;letter-spacing:0.22em;color:var(--dim);text-transform:uppercase;margin:32px 0 16px;display:flex;align-items:center;gap:14px;}
 .stitle::after{content:'';flex:1;height:1px;background:var(--b1);}
+.stitle-count{font-family:var(--mono);font-size:9px;color:var(--dim2);background:var(--b1);padding:2px 8px;border-radius:2px;margin-left:0;}
 
 .stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--b1);margin-bottom:2px;}
 .stat{background:var(--s1);padding:20px 24px;}
@@ -72,6 +73,8 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 .draft-card.status-failed{border-left:3px solid var(--red);}
 .draft-card.type-value{border-left:3px solid var(--blue);}
 .draft-card.type-lab{border-left:3px solid var(--amber);}
+/* Published overrides type colour */
+.draft-card.status-published{border-left:3px solid var(--green) !important;}
 
 .draft-header{padding:16px 24px;display:flex;align-items:center;gap:16px;cursor:pointer;user-select:none;border-bottom:1px solid transparent;transition:border-color 0.2s;}
 .draft-card.open .draft-header{border-bottom-color:var(--b1);}
@@ -81,13 +84,25 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 .dot-rejected{background:var(--dim);}
 .dot-failed{background:var(--red);}
 .dot-approved{background:var(--amber);}
-.draft-topic{font-size:14px;font-weight:500;flex:1;}
+.draft-topic{font-size:14px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .draft-meta{font-family:var(--mono);font-size:10px;color:var(--dim);flex-shrink:0;}
 .draft-rotation{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;flex-shrink:0;}
 .draft-rotation.type-value{color:var(--blue);}
 .draft-rotation.type-lab{color:var(--amber);}
 .draft-chevron{font-size:12px;color:var(--dim);transition:transform 0.2s;flex-shrink:0;}
 .draft-card.open .draft-chevron{transform:rotate(180deg);}
+
+/* History card summary strip — visible even when collapsed */
+.history-strip{padding:8px 24px 12px;display:flex;align-items:center;gap:16px;border-top:1px solid var(--b1);background:var(--bg);}
+.draft-card.open .history-strip{display:none;}
+.hs-img{width:36px;height:36px;object-fit:cover;border:1px solid var(--b1);flex-shrink:0;}
+.hs-img-placeholder{width:36px;height:36px;background:var(--s2);border:1px solid var(--b1);flex-shrink:0;}
+.hs-copy{font-size:12px;color:var(--dim2);line-height:1.5;flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.hs-status{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0;padding:3px 8px;}
+.hs-status.published{color:var(--green);border:1px solid rgba(0,255,135,0.2);}
+.hs-status.rejected{color:var(--dim);border:1px solid var(--b1);}
+.hs-status.failed{color:var(--red);border:1px solid rgba(255,45,45,0.2);}
+.hs-date{font-family:var(--mono);font-size:9px;color:var(--dim);flex-shrink:0;text-align:right;line-height:1.6;}
 
 .draft-body{display:none;padding:24px;}
 .draft-card.open .draft-body{display:block;}
@@ -160,6 +175,12 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 .cron-row .cn{color:var(--red);min-width:90px;}
 .cron-row .cs{min-width:200px;color:rgba(255,255,255,0.6);}
 
+/* History filter bar */
+.history-filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.hf-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 14px;background:var(--s1);border:1px solid var(--b1);color:var(--dim2);cursor:pointer;transition:all 0.15s;}
+.hf-btn.active{border-color:var(--red);color:var(--w);}
+.hf-btn:hover{color:var(--w);}
+
 #toast{position:fixed;bottom:24px;right:24px;background:var(--s1);border:1px solid var(--b1);padding:12px 20px;font-family:var(--mono);font-size:11px;letter-spacing:0.08em;z-index:1000;transform:translateY(12px);opacity:0;transition:all 0.25s;pointer-events:none;max-width:320px;}
 #toast.show{transform:translateY(0);opacity:1;}
 #toast.ok{border-color:var(--green);color:var(--green);}
@@ -205,7 +226,17 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
         <strong style="color:var(--w)">Nothing posts without your approval.</strong>
       </p>
       <div id="queue-list"></div>
-      <div class="stitle">Post History</div>
+
+      <div class="stitle" style="margin-top:48px">
+        Post History
+        <span class="stitle-count" id="history-count"></span>
+      </div>
+      <div class="history-filter">
+        <button class="hf-btn active" onclick="filterHistory('all',this)">ALL</button>
+        <button class="hf-btn" onclick="filterHistory('published',this)">PUBLISHED</button>
+        <button class="hf-btn" onclick="filterHistory('rejected',this)">REJECTED</button>
+        <button class="hf-btn" onclick="filterHistory('failed',this)">FAILED</button>
+      </div>
       <div id="history-list"></div>
     </div>
 
@@ -273,6 +304,8 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 
 <script>
 let SECRET = "";
+let ALL_HISTORY = [];
+let CURRENT_FILTER = "all";
 
 const ROT_LABELS = {
   value_react:"React Architecture",value_perf:"Performance Eng.",
@@ -350,7 +383,8 @@ async function loadReview() {
     const data   = await api("/api/agent/drafts");
     const drafts = data.drafts ?? [];
     const pending = drafts.filter(d => d.status === "pending");
-    const history = drafts.filter(d => d.status !== "pending");
+    const history = drafts.filter(d => d.status !== "pending")
+                          .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const badge = document.getElementById("pending-badge");
     if (pending.length > 0) { badge.textContent = pending.length; badge.style.display = "inline"; }
@@ -358,24 +392,58 @@ async function loadReview() {
 
     document.getElementById("queue-list").innerHTML = pending.length === 0
       ? `<div class="queue-empty"><p>NO DRAFTS PENDING REVIEW</p><p class="trigger-hint">Go to TRIGGER tab and click GENERATE NOW</p></div>`
-      : pending.map(d => draftCard(d, true)).join("");
+      : pending.map(d => draftCard(d, true, false)).join("");
 
-    document.getElementById("history-list").innerHTML = history.length === 0
-      ? `<div class="empty">No post history yet.</div>`
-      : history.slice(0, 20).map(d => draftCard(d, false)).join("");
+    // Store history globally for filtering
+    ALL_HISTORY = history;
+    renderHistory();
+
   } catch(e) {
     document.getElementById("queue-list").innerHTML = `<div class="queue-empty"><p style="color:var(--red)">ERROR: ${e.message}</p></div>`;
   }
 }
 
-function draftCard(d, isOpen) {
-  const dot   = {pending:"dot-pending",approved:"dot-approved",published:"dot-published",rejected:"dot-rejected",failed:"dot-failed"}[d.status]??"dot-pending";
-  const ago   = d.createdAt ? timeAgo(new Date(d.createdAt)) : "";
+function filterHistory(filter, btn) {
+  CURRENT_FILTER = filter;
+  document.querySelectorAll(".hf-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderHistory();
+}
+
+function renderHistory() {
+  const filtered = CURRENT_FILTER === "all"
+    ? ALL_HISTORY
+    : ALL_HISTORY.filter(d => d.status === CURRENT_FILTER);
+
+  const countEl = document.getElementById("history-count");
+  countEl.textContent = `${filtered.length} of ${ALL_HISTORY.length}`;
+
+  document.getElementById("history-list").innerHTML = filtered.length === 0
+    ? `<div class="empty">No ${CURRENT_FILTER === "all" ? "" : CURRENT_FILTER + " "}posts yet.</div>`
+    : filtered.map(d => draftCard(d, false, true)).join("");
+}
+
+function draftCard(d, isOpen, isHistory) {
+  const dot   = {pending:"dot-pending",approved:"dot-approved",published:"dot-published",rejected:"dot-rejected",failed:"dot-failed"}[d.status] ?? "dot-pending";
   const rType = d.rotationType ?? ROT_TYPE[d.rotationId] ?? "value";
   const rLbl  = ROT_LABELS[d.rotationId] ?? d.rotationId ?? "";
   const img   = d.visual?.imageUrl
     ? `<img class="draft-image" src="${d.visual.imageUrl}" loading="lazy" />`
     : `<div class="draft-image-placeholder">NO IMAGE</div>`;
+
+  // Formatted date for history
+  const createdDate = d.createdAt ? new Date(d.createdAt) : null;
+  const formattedDate = createdDate
+    ? createdDate.toLocaleDateString("en-ZA", { timeZone:"Africa/Johannesburg", day:"numeric", month:"short", year:"numeric" })
+    : "";
+  const formattedTime = createdDate
+    ? createdDate.toLocaleTimeString("en-ZA", { timeZone:"Africa/Johannesburg", hour:"2-digit", minute:"2-digit", hour12:false })
+    : "";
+
+  const publishedDate = d.publishedAt ? new Date(d.publishedAt) : null;
+  const formattedPublished = publishedDate
+    ? publishedDate.toLocaleDateString("en-ZA", { timeZone:"Africa/Johannesburg", day:"numeric", month:"short", year:"numeric" })
+    : null;
 
   const actions = d.status === "pending"
     ? `<div class="action-bar">
@@ -385,8 +453,23 @@ function draftCard(d, isOpen) {
        </div>`
     : `<div class="action-bar">
         <span class="status-label label-${d.status}">${d.status.toUpperCase()}</span>
-        ${d.publishedAt ? `<span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Published ${timeAgo(new Date(d.publishedAt))}</span>` : ""}
+        ${formattedPublished ? `<span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Published ${formattedPublished}</span>` : ""}
        </div>`;
+
+  // Summary strip shown when history card is collapsed
+  const fbPreview = (d.copy?.facebook ?? "").slice(0, 160).replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const historyStrip = isHistory ? `
+    <div class="history-strip">
+      ${d.visual?.imageUrl
+        ? `<img class="hs-img" src="${d.visual.imageUrl}" loading="lazy" />`
+        : `<div class="hs-img-placeholder"></div>`}
+      <div class="hs-copy">${fbPreview}${fbPreview.length >= 160 ? "…" : ""}</div>
+      <span class="hs-status ${d.status}">${d.status.toUpperCase()}</span>
+      <div class="hs-date">
+        <div>${formattedDate}</div>
+        <div style="color:var(--dim)">${formattedTime}</div>
+      </div>
+    </div>` : "";
 
   return `
   <div class="draft-card status-${d.status} type-${rType} ${isOpen?"open":""}" id="dc-${d.id}">
@@ -394,9 +477,12 @@ function draftCard(d, isOpen) {
       <div class="draft-status-dot ${dot}"></div>
       <div class="draft-topic">${d.topic ?? "Untitled"}</div>
       <div class="draft-rotation type-${rType}">${rLbl.toUpperCase()}</div>
-      <div class="draft-meta">${ago}</div>
+      ${isHistory
+        ? `<div class="draft-meta">${formattedDate}</div>`
+        : `<div class="draft-meta">${d.createdAt ? timeAgo(new Date(d.createdAt)) : ""}</div>`}
       <div class="draft-chevron">▾</div>
     </div>
+    ${historyStrip}
     <div class="draft-body">
       <div class="draft-layout">
         <div class="draft-image-wrap">${img}<div class="image-meta">${d.visual?.styleUsed??""}</div></div>
@@ -406,10 +492,10 @@ function draftCard(d, isOpen) {
             <button class="ctab"        onclick="copyTab('${d.id}','ig',this)">INSTAGRAM</button>
           </div>
           <div class="copy-content active" id="ct-${d.id}-fb">
-            <div class="copy-box"><div class="copy-box-label">Facebook Post</div><p>${d.copy?.facebook??""}</p></div>
+            <div class="copy-box"><div class="copy-box-label">Facebook Post</div><p>${escHtml(d.copy?.facebook??"")}</p></div>
           </div>
           <div class="copy-content" id="ct-${d.id}-ig">
-            <div class="copy-box"><div class="copy-box-label">Instagram Caption</div><p>${d.copy?.instagram??""}</p></div>
+            <div class="copy-box"><div class="copy-box-label">Instagram Caption</div><p>${escHtml(d.copy?.instagram??"")}</p></div>
           </div>
           ${actions}
         </div>
@@ -418,7 +504,14 @@ function draftCard(d, isOpen) {
   </div>`;
 }
 
-function toggleDraft(id) { document.getElementById("dc-"+id).classList.toggle("open"); }
+function escHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function toggleDraft(id) {
+  const card = document.getElementById("dc-"+id);
+  card.classList.toggle("open");
+}
 
 function copyTab(draftId, platform, btn) {
   const card = document.getElementById("dc-"+draftId);
@@ -485,7 +578,6 @@ async function loadOverview() {
       <div class="stat"><div class="stat-l">Hot Leads</div><div class="stat-v" style="color:var(--red)">${m.hotLeads??0}</div><div class="stat-s">score 4–5</div></div>
       <div class="stat"><div class="stat-l">All Leads</div><div class="stat-v">${m.leadsFound??0}</div></div>`;
 
-    // Recent posts table
     const posts = d.recentPosts ?? [];
     document.getElementById("recent-posts-wrap").innerHTML = posts.length === 0
       ? `<div class="empty">No published posts yet.</div>`
@@ -513,7 +605,6 @@ async function loadPerf() {
     const d = await api("/api/agent/perf");
     const w = d.weights ?? {};
 
-    // Show all rotations that have a weight entry, plus known defaults
     const valueRotations = [
       {id:"value_react",l:"React Architecture"},{id:"value_perf",l:"Performance Eng."},
       {id:"value_css",l:"Modern CSS"},{id:"value_debug",l:"Debug in Public"},
