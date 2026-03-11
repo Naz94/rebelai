@@ -213,6 +213,8 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
       <div id="last-run-wrap"></div>
       <div class="stitle">Metrics</div>
       <div class="stat-row" id="stats"></div>
+      <div class="stitle" style="margin-top:32px">Recent Posts</div>
+      <div id="recent-posts-wrap"></div>
     </div>
 
     <div class="tab" id="tab-performance">
@@ -275,11 +277,21 @@ let SECRET = "";
 const ROT_LABELS = {
   value_react:"React Architecture",value_perf:"Performance Eng.",
   value_css:"Modern CSS",value_debug:"Debug in Public",
-  lab_tool:"Lab Tool Showcase",lab_template:"Free Template"
+  value_micro_lesson:"Micro Lesson",value_hot_take:"Hot Take",
+  value_systems:"Systems",value_contrarian:"Contrarian",
+  value_rulebook:"Rulebook",value_system_breakdown:"System Breakdown",
+  value_automation:"Automation",value_sa_context:"SA Context",
+  value_builder:"Builder",value_ai_systems:"AI Systems",
+  lab_tool:"Lab Tool Showcase",lab_template:"Free Template",
+  lab_infrastructure:"Infrastructure"
 };
 const ROT_TYPE = {
   value_react:"value",value_perf:"value",value_css:"value",value_debug:"value",
-  lab_tool:"lab",lab_template:"lab"
+  value_micro_lesson:"value",value_hot_take:"value",value_systems:"value",
+  value_contrarian:"value",value_rulebook:"value",value_system_breakdown:"value",
+  value_automation:"value",value_sa_context:"value",value_builder:"value",
+  value_ai_systems:"value",
+  lab_tool:"lab",lab_template:"lab",lab_infrastructure:"lab"
 };
 
 function h() { return { "x-agent-secret": SECRET, "Content-Type": "application/json" }; }
@@ -451,21 +463,48 @@ async function rejectDraft(id, btn) {
 
 async function loadOverview() {
   try {
-    const d = await api("/api/agent/status");
+    const d  = await api("/api/agent/status");
     const lr = d.lastRun;
     const m  = d.metrics ?? {};
+
     document.getElementById("last-run-wrap").innerHTML = lr ? `
       <div class="last-run">
         <div class="badge draft">${lr.status ?? "—"}</div>
-        <div><div style="font-size:13px;font-weight:500">${lr.rotation??""}</div>
-        <div style="font-size:11px;color:var(--dim);margin-top:2px">${lr.topic??""}</div></div>
-        <div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim)">${lr.timestamp ? new Date(lr.timestamp).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"}) : ""}</div>
+        <div>
+          <div style="font-size:13px;font-weight:500">${lr.rotation??""}</div>
+          <div style="font-size:11px;color:var(--dim);margin-top:2px">${lr.topic??""}</div>
+        </div>
+        <div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim)">
+          ${lr.timestamp ? new Date(lr.timestamp).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"}) : ""}
+        </div>
       </div>` : "";
+
     document.getElementById("stats").innerHTML = `
       <div class="stat"><div class="stat-l">Published</div><div class="stat-v">${m.totalPosts??0}</div></div>
-      <div class="stat"><div class="stat-l">Avg Score</div><div class="stat-v">${m.avgScore??"—"}</div></div>
-      <div class="stat"><div class="stat-l">Hot Leads</div><div class="stat-v" style="color:var(--red)">${m.hotLeads??0}</div></div>
+      <div class="stat"><div class="stat-l">Avg Score</div><div class="stat-v">${m.avgScore??"—"}</div><div class="stat-s">out of 100</div></div>
+      <div class="stat"><div class="stat-l">Hot Leads</div><div class="stat-v" style="color:var(--red)">${m.hotLeads??0}</div><div class="stat-s">score 4–5</div></div>
       <div class="stat"><div class="stat-l">All Leads</div><div class="stat-v">${m.leadsFound??0}</div></div>`;
+
+    // Recent posts table
+    const posts = d.recentPosts ?? [];
+    document.getElementById("recent-posts-wrap").innerHTML = posts.length === 0
+      ? `<div class="empty">No published posts yet.</div>`
+      : posts.map(p => {
+          const rType = ROT_TYPE[p.rotationId] ?? "value";
+          const rLbl  = ROT_LABELS[p.rotationId] ?? p.rotationId ?? "—";
+          const score = p.score != null
+            ? `<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:${p.score>60?"var(--green)":p.score>35?"var(--amber)":"var(--dim)"}">${p.score}</span>`
+            : `<span style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:0.1em">PENDING</span>`;
+          return `
+          <div style="background:var(--s1);border:1px solid var(--b1);border-left:3px solid ${rType==="lab"?"var(--amber)":"var(--blue)"};padding:14px 20px;margin-bottom:1px;display:flex;align-items:center;gap:16px">
+            <div style="min-width:52px;text-align:center">${score}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.topic ?? "—"}</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:0.08em">${rLbl.toUpperCase()} · ${(p.platform??"").toUpperCase()}</div>
+            </div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--dim);flex-shrink:0">${p.publishedAt ? timeAgo(new Date(p.publishedAt)) : "—"}</div>
+          </div>`;
+        }).join("");
   } catch(e) { console.error(e); }
 }
 
@@ -473,17 +512,53 @@ async function loadPerf() {
   try {
     const d = await api("/api/agent/perf");
     const w = d.weights ?? {};
-    const vr = [{id:"value_react",l:"React Architecture"},{id:"value_perf",l:"Performance Eng."},{id:"value_css",l:"Modern CSS"},{id:"value_debug",l:"Debug in Public"}];
-    const lr = [{id:"lab_tool",l:"Lab Tool Showcase"},{id:"lab_template",l:"Free Template"}];
+
+    // Show all rotations that have a weight entry, plus known defaults
+    const valueRotations = [
+      {id:"value_react",l:"React Architecture"},{id:"value_perf",l:"Performance Eng."},
+      {id:"value_css",l:"Modern CSS"},{id:"value_debug",l:"Debug in Public"},
+      {id:"value_micro_lesson",l:"Micro Lesson"},{id:"value_hot_take",l:"Hot Take"},
+      {id:"value_systems",l:"Systems"},{id:"value_contrarian",l:"Contrarian"},
+      {id:"value_rulebook",l:"Rulebook"},{id:"value_system_breakdown",l:"System Breakdown"},
+      {id:"value_automation",l:"Automation"},{id:"value_sa_context",l:"SA Context"},
+      {id:"value_builder",l:"Builder"},{id:"value_ai_systems",l:"AI Systems"},
+    ];
+    const labRotations = [
+      {id:"lab_tool",l:"Lab Tool Showcase"},{id:"lab_template",l:"Free Template"},
+      {id:"lab_infrastructure",l:"Infrastructure"},
+    ];
+
     let html = `<div class="perf-group-label value">Pure Value — 70% target</div>`;
-    html += vr.map(r => `<div class="perf-row"><div class="perf-label">${r.l}</div><div class="perf-track"><div class="perf-fill-value" style="width:${w[r.id]??50}%"></div></div><div class="perf-val">${w[r.id]??50}</div></div>`).join("");
+    html += valueRotations.map(r => `
+      <div class="perf-row">
+        <div class="perf-label">${r.l}</div>
+        <div class="perf-track"><div class="perf-fill-value" style="width:${w[r.id]??50}%"></div></div>
+        <div class="perf-val">${w[r.id]??50}</div>
+      </div>`).join("");
     html += `<div class="perf-group-label lab" style="margin-top:24px">Lab Showcase — 30% target</div>`;
-    html += lr.map(r => `<div class="perf-row"><div class="perf-label">${r.l}</div><div class="perf-track"><div class="perf-fill-lab" style="width:${w[r.id]??50}%"></div></div><div class="perf-val">${w[r.id]??50}</div></div>`).join("");
+    html += labRotations.map(r => `
+      <div class="perf-row">
+        <div class="perf-label">${r.l}</div>
+        <div class="perf-track"><div class="perf-fill-lab" style="width:${w[r.id]??50}%"></div></div>
+        <div class="perf-val">${w[r.id]??50}</div>
+      </div>`).join("");
+
     document.getElementById("rot-bars").innerHTML = html;
+
     const top = d.topPosts ?? [];
     document.getElementById("top-posts").innerHTML = top.length
-      ? top.map(p=>`<div style="background:var(--s1);border:1px solid var(--b1);border-left:3px solid ${(ROT_TYPE[p.rotationId]??"value")==="lab"?"var(--amber)":"var(--blue)"};padding:16px 20px;margin-bottom:1px;display:flex;align-items:center;gap:16px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${p.score>60?"var(--green)":p.score>35?"var(--amber)":"var(--dim)"};min-width:48px">${p.score}</div><div><div style="font-size:13px">${ROT_LABELS[p.rotationId]??p.rotationId??""}</div><div style="font-size:11px;color:var(--dim);margin-top:2px;font-family:var(--mono)">${p.platform??""}</div></div></div>`).join("")
-      : `<div class="empty">No performance data yet.</div>`;
+      ? top.map(p => {
+          const rType = ROT_TYPE[p.rotationId] ?? "value";
+          return `
+          <div style="background:var(--s1);border:1px solid var(--b1);border-left:3px solid ${rType==="lab"?"var(--amber)":"var(--blue)"};padding:16px 20px;margin-bottom:1px;display:flex;align-items:center;gap:16px">
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${p.score>60?"var(--green)":p.score>35?"var(--amber)":"var(--dim)"};min-width:48px">${p.score}</div>
+            <div>
+              <div style="font-size:13px">${ROT_LABELS[p.rotationId]??p.rotationId??""}</div>
+              <div style="font-size:11px;color:var(--dim);margin-top:2px;font-family:var(--mono)">${p.platform??""} · ${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString("en-ZA") : ""}</div>
+            </div>
+          </div>`;
+        }).join("")
+      : `<div class="empty">No score data yet — run Analysis from the Trigger tab.</div>`;
   } catch(e) { console.error(e); }
 }
 
@@ -542,7 +617,11 @@ async function triggerScan() {
 }
 async function triggerTrends() {
   toast("Refreshing...","info");
-  try { const r = await api("/api/agent/trends","POST"); toast(r.success?"Brief updated":`Error: ${r.error}`,r.success?"ok":"err"); if(document.getElementById("tab-intel").classList.contains("active"))loadIntel(); } catch(e){toast(e.message,"err");}
+  try {
+    const r = await api("/api/agent/trends","POST");
+    toast(r.success?"Brief updated":`Error: ${r.error}`,r.success?"ok":"err");
+    if(document.getElementById("tab-intel").classList.contains("active")) loadIntel();
+  } catch(e){toast(e.message,"err");}
 }
 
 function timeAgo(date) {
