@@ -73,7 +73,6 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 .draft-card.status-failed{border-left:3px solid var(--red);}
 .draft-card.type-value{border-left:3px solid var(--blue);}
 .draft-card.type-lab{border-left:3px solid var(--amber);}
-/* Published overrides type colour */
 .draft-card.status-published{border-left:3px solid var(--green) !important;}
 
 .draft-header{padding:16px 24px;display:flex;align-items:center;gap:16px;cursor:pointer;user-select:none;border-bottom:1px solid transparent;transition:border-color 0.2s;}
@@ -92,7 +91,6 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 .draft-chevron{font-size:12px;color:var(--dim);transition:transform 0.2s;flex-shrink:0;}
 .draft-card.open .draft-chevron{transform:rotate(180deg);}
 
-/* History card summary strip — visible even when collapsed */
 .history-strip{padding:8px 24px 12px;display:flex;align-items:center;gap:16px;border-top:1px solid var(--b1);background:var(--bg);}
 .draft-card.open .history-strip{display:none;}
 .hs-img{width:36px;height:36px;object-fit:cover;border:1px solid var(--b1);flex-shrink:0;}
@@ -175,11 +173,15 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 .cron-row .cn{color:var(--red);min-width:90px;}
 .cron-row .cs{min-width:200px;color:rgba(255,255,255,0.6);}
 
-/* History filter bar */
 .history-filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
 .hf-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 14px;background:var(--s1);border:1px solid var(--b1);color:var(--dim2);cursor:pointer;transition:all 0.15s;}
 .hf-btn.active{border-color:var(--red);color:var(--w);}
 .hf-btn:hover{color:var(--w);}
+
+/* ── CAPTION TAB ── */
+.plat-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:10px 16px;background:var(--s1);color:var(--dim2);border:1px solid var(--b1);cursor:pointer;transition:all 0.15s;}
+.plat-btn.active{background:var(--red);color:var(--w);border-color:var(--red);}
+.plat-btn:hover:not(.active){border-color:var(--w);color:var(--w);}
 
 #toast{position:fixed;bottom:24px;right:24px;background:var(--s1);border:1px solid var(--b1);padding:12px 20px;font-family:var(--mono);font-size:11px;letter-spacing:0.08em;z-index:1000;transform:translateY(12px);opacity:0;transition:all 0.25s;pointer-events:none;max-width:320px;}
 #toast.show{transform:translateY(0);opacity:1;}
@@ -215,10 +217,12 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
     <button onclick="tab('performance',this)">PERFORMANCE</button>
     <button onclick="tab('leads',this)">LEADS <span class="nav-badge" id="lead-badge" style="display:none">0</span></button>
     <button onclick="tab('intel',this)">INTELLIGENCE</button>
+    <button onclick="tab('caption',this)">CAPTION</button>
     <button onclick="tab('trigger',this)">TRIGGER</button>
   </nav>
   <main>
 
+    <!-- REVIEW QUEUE -->
     <div class="tab active" id="tab-review">
       <div class="stitle">Pending Approval</div>
       <p style="font-size:13px;color:var(--dim2);margin-bottom:24px;line-height:1.7">
@@ -240,6 +244,7 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
       <div id="history-list"></div>
     </div>
 
+    <!-- OVERVIEW -->
     <div class="tab" id="tab-overview">
       <div id="last-run-wrap"></div>
       <div class="stitle">Metrics</div>
@@ -248,6 +253,7 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
       <div id="recent-posts-wrap"></div>
     </div>
 
+    <!-- PERFORMANCE -->
     <div class="tab" id="tab-performance">
       <div class="stitle">Rotation Weights</div>
       <div style="background:var(--s1);border:1px solid var(--b1);padding:32px;margin-bottom:24px" id="rot-bars"></div>
@@ -255,18 +261,138 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
       <div id="top-posts"></div>
     </div>
 
+    <!-- LEADS -->
     <div class="tab" id="tab-leads">
       <div class="stitle">Lead Intelligence</div>
       <p style="font-size:13px;color:var(--dim2);margin-bottom:24px;line-height:1.7">High-intent commenters. <span style="font-family:var(--mono);font-size:10px;color:var(--red)">You contact them. The agent never does.</span></p>
       <div id="leads-list"></div>
     </div>
 
+    <!-- INTELLIGENCE -->
     <div class="tab" id="tab-intel">
       <div class="stitle">Daily Trend Brief</div>
       <div id="intel-wrap"></div>
       <div style="margin-top:16px"><button class="btn btn-ghost" onclick="triggerTrends()">REFRESH BRIEF</button></div>
     </div>
 
+    <!-- CAPTION -->
+    <div class="tab" id="tab-caption">
+      <div class="stitle">Custom Caption Generator</div>
+      <p style="font-size:13px;color:var(--dim2);margin-bottom:28px;line-height:1.7">
+        Upload an image (optional), add a hook and context, pick an angle. The engine applies brand voice and saves to the review queue.
+      </p>
+
+      <div style="display:grid;grid-template-columns:320px 1fr;gap:32px;align-items:start">
+
+        <!-- Left: image upload -->
+        <div>
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:10px">
+            Image <span style="color:var(--dim2)">(optional)</span>
+          </div>
+          <div id="drop-zone" style="border:2px dashed var(--b2);width:100%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.2s;position:relative;background:var(--s1);"
+               onclick="document.getElementById('img-input').click()"
+               ondragover="event.preventDefault();this.style.borderColor='var(--red)'"
+               ondragleave="this.style.borderColor='var(--b2)'"
+               ondrop="handleDrop(event)">
+            <div id="drop-label" style="text-align:center;pointer-events:none;padding:20px">
+              <div style="font-size:28px;margin-bottom:10px;color:var(--dim)">↑</div>
+              <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--dim);text-transform:uppercase">Drop image or click</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--dim2);margin-top:6px">Optional · JPG · PNG · WEBP</div>
+            </div>
+            <img id="preview-img" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+          </div>
+          <input type="file" id="img-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleFileSelect(this.files[0])" />
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+            <div id="file-name" style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase"></div>
+            <button id="clear-img-btn" onclick="clearImage()" style="display:none;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;background:none;border:none;color:var(--dim2);cursor:pointer">✕ CLEAR</button>
+          </div>
+        </div>
+
+        <!-- Right: brief fields -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">
+              Hook / Opening Idea <span style="color:var(--dim2)">(optional)</span>
+            </div>
+            <textarea id="cap-hook" rows="2" placeholder="e.g. The order confirmation was arriving 4 hours after the sale" style="width:100%;background:var(--s1);border:1px solid var(--b1);color:var(--w);font-family:var(--sans);font-size:13px;padding:14px 16px;resize:vertical;outline:none;transition:border-color 0.2s;line-height:1.6;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--b1)'"></textarea>
+          </div>
+
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">
+              Context <span style="color:var(--dim2)">(optional — background the image doesn't show)</span>
+            </div>
+            <textarea id="cap-context" rows="3" placeholder="e.g. This is the QuickShap order tracking view. Built over a weekend. The challenge was state sync under 50ms on 3G." style="width:100%;background:var(--s1);border:1px solid var(--b1);color:var(--w);font-family:var(--sans);font-size:13px;padding:14px 16px;resize:vertical;outline:none;transition:border-color 0.2s;line-height:1.6;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--b1)'"></textarea>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div>
+              <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Angle Type</div>
+              <select id="cap-angle" style="width:100%;background:var(--s1);border:1px solid var(--b1);color:var(--w);font-family:var(--mono);font-size:11px;padding:12px 14px;outline:none;cursor:pointer;transition:border-color 0.2s;appearance:none;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--b1)'">
+                <option value="">Auto — engine decides</option>
+                <option value="Contrarian">Contrarian</option>
+                <option value="Breakdown">Breakdown</option>
+                <option value="Hidden Cost">Hidden Cost</option>
+                <option value="Before/After">Before / After</option>
+                <option value="Decision">Decision</option>
+                <option value="War Story">War Story</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Post Type</div>
+              <select id="cap-type" style="width:100%;background:var(--s1);border:1px solid var(--b1);color:var(--w);font-family:var(--mono);font-size:11px;padding:12px 14px;outline:none;cursor:pointer;transition:border-color 0.2s;appearance:none;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--b1)'">
+                <option value="value">Pure Value — ends with question</option>
+                <option value="lab">Lab / Showcase — ends with CTA</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Platforms</div>
+            <div style="display:flex;gap:8px">
+              <button id="plat-both"      class="plat-btn active" onclick="setPlatform('both')">Both</button>
+              <button id="plat-facebook"  class="plat-btn"        onclick="setPlatform('facebook')">Facebook</button>
+              <button id="plat-instagram" class="plat-btn"        onclick="setPlatform('instagram')">Instagram</button>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-caption" onclick="generateCaption()" style="width:100%;padding:16px;font-size:11px;letter-spacing:0.2em;justify-content:center">
+            GENERATE CAPTIONS
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Vision analysis -->
+      <div id="cap-analysis-wrap" style="display:none;margin-top:36px">
+        <div class="stitle">Vision Analysis</div>
+        <div id="cap-analysis" style="background:var(--s1);border:1px solid var(--b1);padding:20px 24px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.45);line-height:2;white-space:pre-wrap"></div>
+      </div>
+
+      <!-- Generated copy -->
+      <div id="cap-result-wrap" style="display:none;margin-top:24px">
+        <div class="stitle">Generated Copy — Saved to Review Queue</div>
+        <div style="background:var(--s1);border:1px solid var(--b1);overflow:hidden">
+          <div class="copy-tabs" style="padding:0 24px">
+            <button id="cap-tab-fb" class="ctab active" onclick="capTab('fb',this)">FACEBOOK</button>
+            <button id="cap-tab-ig" class="ctab"        onclick="capTab('ig',this)">INSTAGRAM</button>
+          </div>
+          <div id="cap-fb" class="copy-content active" style="padding:20px 24px">
+            <div class="copy-box"><div class="copy-box-label">Post Copy</div><p id="cap-fb-text"></p></div>
+          </div>
+          <div id="cap-ig" class="copy-content" style="padding:20px 24px">
+            <div class="copy-box"><div class="copy-box-label">Caption</div><p id="cap-ig-text"></p></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px">
+          <button class="btn btn-approve" id="cap-approve-btn" onclick="approveCaption()">✓ APPROVE &amp; POST</button>
+          <button class="btn btn-ghost"   onclick="resetCaption()">↩ NEW CAPTION</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TRIGGER -->
     <div class="tab" id="tab-trigger">
       <div class="stitle">Manual Controls</div>
       <div class="trigger-grid">
@@ -306,6 +432,9 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 let SECRET = "";
 let ALL_HISTORY = [];
 let CURRENT_FILTER = "all";
+let captionFile     = null;
+let captionPlatform = "both";
+let captionDraftId  = null;
 
 const ROT_LABELS = {
   value_react:"React Architecture",value_perf:"Performance Eng.",
@@ -316,7 +445,8 @@ const ROT_LABELS = {
   value_automation:"Automation",value_sa_context:"SA Context",
   value_builder:"Builder",value_ai_systems:"AI Systems",
   lab_tool:"Lab Tool Showcase",lab_template:"Free Template",
-  lab_infrastructure:"Infrastructure"
+  lab_infrastructure:"Infrastructure",
+  custom_caption:"Custom Caption"
 };
 const ROT_TYPE = {
   value_react:"value",value_perf:"value",value_css:"value",value_debug:"value",
@@ -324,7 +454,8 @@ const ROT_TYPE = {
   value_contrarian:"value",value_rulebook:"value",value_system_breakdown:"value",
   value_automation:"value",value_sa_context:"value",value_builder:"value",
   value_ai_systems:"value",
-  lab_tool:"lab",lab_template:"lab",lab_infrastructure:"lab"
+  lab_tool:"lab",lab_template:"lab",lab_infrastructure:"lab",
+  custom_caption:"value"
 };
 
 function h() { return { "x-agent-secret": SECRET, "Content-Type": "application/json" }; }
@@ -378,6 +509,8 @@ function tab(name, btn) {
   if (name==="intel")       loadIntel();
 }
 
+// ── REVIEW ──────────────────────────────────────────────────
+
 async function loadReview() {
   try {
     const data   = await api("/api/agent/drafts");
@@ -391,13 +524,11 @@ async function loadReview() {
     else badge.style.display = "none";
 
     document.getElementById("queue-list").innerHTML = pending.length === 0
-      ? `<div class="queue-empty"><p>NO DRAFTS PENDING REVIEW</p><p class="trigger-hint">Go to TRIGGER tab and click GENERATE NOW</p></div>`
+      ? `<div class="queue-empty"><p>NO DRAFTS PENDING REVIEW</p><p class="trigger-hint">Go to TRIGGER tab and click GENERATE NOW, or use the CAPTION tab.</p></div>`
       : pending.map(d => draftCard(d, true, false)).join("");
 
-    // Store history globally for filtering
     ALL_HISTORY = history;
     renderHistory();
-
   } catch(e) {
     document.getElementById("queue-list").innerHTML = `<div class="queue-empty"><p style="color:var(--red)">ERROR: ${e.message}</p></div>`;
   }
@@ -414,10 +545,7 @@ function renderHistory() {
   const filtered = CURRENT_FILTER === "all"
     ? ALL_HISTORY
     : ALL_HISTORY.filter(d => d.status === CURRENT_FILTER);
-
-  const countEl = document.getElementById("history-count");
-  countEl.textContent = `${filtered.length} of ${ALL_HISTORY.length}`;
-
+  document.getElementById("history-count").textContent = `${filtered.length} of ${ALL_HISTORY.length}`;
   document.getElementById("history-list").innerHTML = filtered.length === 0
     ? `<div class="empty">No ${CURRENT_FILTER === "all" ? "" : CURRENT_FILTER + " "}posts yet.</div>`
     : filtered.map(d => draftCard(d, false, true)).join("");
@@ -427,23 +555,22 @@ function draftCard(d, isOpen, isHistory) {
   const dot   = {pending:"dot-pending",approved:"dot-approved",published:"dot-published",rejected:"dot-rejected",failed:"dot-failed"}[d.status] ?? "dot-pending";
   const rType = d.rotationType ?? ROT_TYPE[d.rotationId] ?? "value";
   const rLbl  = ROT_LABELS[d.rotationId] ?? d.rotationId ?? "";
-  const img   = d.visual?.imageUrl
-    ? `<img class="draft-image" src="${d.visual.imageUrl}" loading="lazy" />`
-    : `<div class="draft-image-placeholder">NO IMAGE</div>`;
 
-  // Formatted date for history
-  const createdDate = d.createdAt ? new Date(d.createdAt) : null;
-  const formattedDate = createdDate
-    ? createdDate.toLocaleDateString("en-ZA", { timeZone:"Africa/Johannesburg", day:"numeric", month:"short", year:"numeric" })
-    : "";
-  const formattedTime = createdDate
-    ? createdDate.toLocaleTimeString("en-ZA", { timeZone:"Africa/Johannesburg", hour:"2-digit", minute:"2-digit", hour12:false })
-    : "";
+  // Image: handle DALL-E URL, uploaded buffer, or text-only
+  let img;
+  if (d.visual?.imageUrl) {
+    img = `<img class="draft-image" src="${d.visual.imageUrl}" loading="lazy" />`;
+  } else if (d.visual?.buffer) {
+    img = `<img class="draft-image" src="data:${d.visual.mimeType ?? 'image/jpeg'};base64,${d.visual.buffer}" loading="lazy" />`;
+  } else {
+    img = `<div class="draft-image-placeholder">${d.visual?.type === "none" ? "TEXT ONLY" : "NO IMAGE"}</div>`;
+  }
 
-  const publishedDate = d.publishedAt ? new Date(d.publishedAt) : null;
-  const formattedPublished = publishedDate
-    ? publishedDate.toLocaleDateString("en-ZA", { timeZone:"Africa/Johannesburg", day:"numeric", month:"short", year:"numeric" })
-    : null;
+  const createdDate    = d.createdAt   ? new Date(d.createdAt)   : null;
+  const publishedDate  = d.publishedAt ? new Date(d.publishedAt) : null;
+  const formattedDate  = createdDate   ? createdDate.toLocaleDateString("en-ZA",{timeZone:"Africa/Johannesburg",day:"numeric",month:"short",year:"numeric"}) : "";
+  const formattedTime  = createdDate   ? createdDate.toLocaleTimeString("en-ZA",{timeZone:"Africa/Johannesburg",hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+  const formattedPub   = publishedDate ? publishedDate.toLocaleDateString("en-ZA",{timeZone:"Africa/Johannesburg",day:"numeric",month:"short",year:"numeric"}) : null;
 
   const actions = d.status === "pending"
     ? `<div class="action-bar">
@@ -453,22 +580,20 @@ function draftCard(d, isOpen, isHistory) {
        </div>`
     : `<div class="action-bar">
         <span class="status-label label-${d.status}">${d.status.toUpperCase()}</span>
-        ${formattedPublished ? `<span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Published ${formattedPublished}</span>` : ""}
+        ${formattedPub ? `<span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Published ${formattedPub}</span>` : ""}
        </div>`;
 
-  // Summary strip shown when history card is collapsed
-  const fbPreview = (d.copy?.facebook ?? "").slice(0, 160).replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const fbPreview = (d.copy?.facebook ?? "").slice(0,160).replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const historyStrip = isHistory ? `
     <div class="history-strip">
       ${d.visual?.imageUrl
         ? `<img class="hs-img" src="${d.visual.imageUrl}" loading="lazy" />`
-        : `<div class="hs-img-placeholder"></div>`}
+        : d.visual?.buffer
+          ? `<img class="hs-img" src="data:${d.visual.mimeType ?? 'image/jpeg'};base64,${d.visual.buffer}" loading="lazy" />`
+          : `<div class="hs-img-placeholder"></div>`}
       <div class="hs-copy">${fbPreview}${fbPreview.length >= 160 ? "…" : ""}</div>
       <span class="hs-status ${d.status}">${d.status.toUpperCase()}</span>
-      <div class="hs-date">
-        <div>${formattedDate}</div>
-        <div style="color:var(--dim)">${formattedTime}</div>
-      </div>
+      <div class="hs-date"><div>${formattedDate}</div><div style="color:var(--dim)">${formattedTime}</div></div>
     </div>` : "";
 
   return `
@@ -504,15 +629,8 @@ function draftCard(d, isOpen, isHistory) {
   </div>`;
 }
 
-function escHtml(str) {
-  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-
-function toggleDraft(id) {
-  const card = document.getElementById("dc-"+id);
-  card.classList.toggle("open");
-}
-
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function toggleDraft(id) { document.getElementById("dc-"+id).classList.toggle("open"); }
 function copyTab(draftId, platform, btn) {
   const card = document.getElementById("dc-"+draftId);
   card.querySelectorAll(".ctab").forEach(b => b.classList.remove("active"));
@@ -528,56 +646,41 @@ async function approveDraft(id, btn) {
     const r = await api("/api/agent/publish","POST",{draftId:id});
     toast(r.success ? "Posted to FB + IG ✓" : `Error: ${r.error}`, r.success?"ok":"err");
     loadReview();
-  } catch(e) {
-    toast(`Error: ${e.message}`,"err");
-    btn.disabled = false; btn.textContent = "✓ APPROVE & POST";
-  }
+  } catch(e) { toast(`Error: ${e.message}`,"err"); btn.disabled=false; btn.textContent="✓ APPROVE & POST"; }
 }
-
 async function regenDraft(id, btn) {
   btn.disabled = true; btn.textContent = "REGENERATING...";
   try {
     const r = await api("/api/agent/draft","POST",{draftId:id,action:"regenerate"});
     toast(r.success ? "New copy ready" : `Error: ${r.error}`, r.success?"ok":"err");
     loadReview();
-  } catch(e) {
-    toast(`Error: ${e.message}`,"err");
-    btn.disabled = false; btn.textContent = "↻ REGENERATE";
-  }
+  } catch(e) { toast(`Error: ${e.message}`,"err"); btn.disabled=false; btn.textContent="↻ REGENERATE"; }
 }
-
 async function rejectDraft(id, btn) {
   if (!confirm("Reject this draft?")) return;
   btn.disabled = true;
   await api("/api/agent/draft","POST",{draftId:id,action:"reject"});
-  toast("Draft rejected","info");
-  loadReview();
+  toast("Draft rejected","info"); loadReview();
 }
+
+// ── OVERVIEW ────────────────────────────────────────────────
 
 async function loadOverview() {
   try {
     const d  = await api("/api/agent/status");
     const lr = d.lastRun;
     const m  = d.metrics ?? {};
-
     document.getElementById("last-run-wrap").innerHTML = lr ? `
       <div class="last-run">
-        <div class="badge draft">${lr.status ?? "—"}</div>
-        <div>
-          <div style="font-size:13px;font-weight:500">${lr.rotation??""}</div>
-          <div style="font-size:11px;color:var(--dim);margin-top:2px">${lr.topic??""}</div>
-        </div>
-        <div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim)">
-          ${lr.timestamp ? new Date(lr.timestamp).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"}) : ""}
-        </div>
+        <div class="badge draft">${lr.status??""}</div>
+        <div><div style="font-size:13px;font-weight:500">${lr.rotation??""}</div><div style="font-size:11px;color:var(--dim);margin-top:2px">${lr.topic??""}</div></div>
+        <div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim)">${lr.timestamp?new Date(lr.timestamp).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"}):""}</div>
       </div>` : "";
-
     document.getElementById("stats").innerHTML = `
       <div class="stat"><div class="stat-l">Published</div><div class="stat-v">${m.totalPosts??0}</div></div>
       <div class="stat"><div class="stat-l">Avg Score</div><div class="stat-v">${m.avgScore??"—"}</div><div class="stat-s">out of 100</div></div>
       <div class="stat"><div class="stat-l">Hot Leads</div><div class="stat-v" style="color:var(--red)">${m.hotLeads??0}</div><div class="stat-s">score 4–5</div></div>
       <div class="stat"><div class="stat-l">All Leads</div><div class="stat-v">${m.leadsFound??0}</div></div>`;
-
     const posts = d.recentPosts ?? [];
     document.getElementById("recent-posts-wrap").innerHTML = posts.length === 0
       ? `<div class="empty">No published posts yet.</div>`
@@ -587,24 +690,21 @@ async function loadOverview() {
           const score = p.score != null
             ? `<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:${p.score>60?"var(--green)":p.score>35?"var(--amber)":"var(--dim)"}">${p.score}</span>`
             : `<span style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:0.1em">PENDING</span>`;
-          return `
-          <div style="background:var(--s1);border:1px solid var(--b1);border-left:3px solid ${rType==="lab"?"var(--amber)":"var(--blue)"};padding:14px 20px;margin-bottom:1px;display:flex;align-items:center;gap:16px">
+          return `<div style="background:var(--s1);border:1px solid var(--b1);border-left:3px solid ${rType==="lab"?"var(--amber)":"var(--blue)"};padding:14px 20px;margin-bottom:1px;display:flex;align-items:center;gap:16px">
             <div style="min-width:52px;text-align:center">${score}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.topic ?? "—"}</div>
-              <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:0.08em">${rLbl.toUpperCase()} · ${(p.platform??"").toUpperCase()}</div>
-            </div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--dim);flex-shrink:0">${p.publishedAt ? timeAgo(new Date(p.publishedAt)) : "—"}</div>
+            <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.topic??"—"}</div><div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:0.08em">${rLbl.toUpperCase()} · ${(p.platform??"").toUpperCase()}</div></div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--dim);flex-shrink:0">${p.publishedAt?timeAgo(new Date(p.publishedAt)):"—"}</div>
           </div>`;
         }).join("");
   } catch(e) { console.error(e); }
 }
 
+// ── PERFORMANCE ─────────────────────────────────────────────
+
 async function loadPerf() {
   try {
     const d = await api("/api/agent/perf");
     const w = d.weights ?? {};
-
     const valueRotations = [
       {id:"value_react",l:"React Architecture"},{id:"value_perf",l:"Performance Eng."},
       {id:"value_css",l:"Modern CSS"},{id:"value_debug",l:"Debug in Public"},
@@ -618,40 +718,19 @@ async function loadPerf() {
       {id:"lab_tool",l:"Lab Tool Showcase"},{id:"lab_template",l:"Free Template"},
       {id:"lab_infrastructure",l:"Infrastructure"},
     ];
-
     let html = `<div class="perf-group-label value">Pure Value — 70% target</div>`;
-    html += valueRotations.map(r => `
-      <div class="perf-row">
-        <div class="perf-label">${r.l}</div>
-        <div class="perf-track"><div class="perf-fill-value" style="width:${w[r.id]??50}%"></div></div>
-        <div class="perf-val">${w[r.id]??50}</div>
-      </div>`).join("");
+    html += valueRotations.map(r => `<div class="perf-row"><div class="perf-label">${r.l}</div><div class="perf-track"><div class="perf-fill-value" style="width:${w[r.id]??50}%"></div></div><div class="perf-val">${w[r.id]??50}</div></div>`).join("");
     html += `<div class="perf-group-label lab" style="margin-top:24px">Lab Showcase — 30% target</div>`;
-    html += labRotations.map(r => `
-      <div class="perf-row">
-        <div class="perf-label">${r.l}</div>
-        <div class="perf-track"><div class="perf-fill-lab" style="width:${w[r.id]??50}%"></div></div>
-        <div class="perf-val">${w[r.id]??50}</div>
-      </div>`).join("");
-
+    html += labRotations.map(r => `<div class="perf-row"><div class="perf-label">${r.l}</div><div class="perf-track"><div class="perf-fill-lab" style="width:${w[r.id]??50}%"></div></div><div class="perf-val">${w[r.id]??50}</div></div>`).join("");
     document.getElementById("rot-bars").innerHTML = html;
-
     const top = d.topPosts ?? [];
     document.getElementById("top-posts").innerHTML = top.length
-      ? top.map(p => {
-          const rType = ROT_TYPE[p.rotationId] ?? "value";
-          return `
-          <div style="background:var(--s1);border:1px solid var(--b1);border-left:3px solid ${rType==="lab"?"var(--amber)":"var(--blue)"};padding:16px 20px;margin-bottom:1px;display:flex;align-items:center;gap:16px">
-            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${p.score>60?"var(--green)":p.score>35?"var(--amber)":"var(--dim)"};min-width:48px">${p.score}</div>
-            <div>
-              <div style="font-size:13px">${ROT_LABELS[p.rotationId]??p.rotationId??""}</div>
-              <div style="font-size:11px;color:var(--dim);margin-top:2px;font-family:var(--mono)">${p.platform??""} · ${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString("en-ZA") : ""}</div>
-            </div>
-          </div>`;
-        }).join("")
+      ? top.map(p => { const rType=ROT_TYPE[p.rotationId]??"value"; return `<div style="background:var(--s1);border:1px solid var(--b1);border-left:3px solid ${rType==="lab"?"var(--amber)":"var(--blue)"};padding:16px 20px;margin-bottom:1px;display:flex;align-items:center;gap:16px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${p.score>60?"var(--green)":p.score>35?"var(--amber)":"var(--dim)"};min-width:48px">${p.score}</div><div><div style="font-size:13px">${ROT_LABELS[p.rotationId]??p.rotationId??""}</div><div style="font-size:11px;color:var(--dim);margin-top:2px;font-family:var(--mono)">${p.platform??""} · ${p.publishedAt?new Date(p.publishedAt).toLocaleDateString("en-ZA"):""}</div></div></div>`; }).join("")
       : `<div class="empty">No score data yet — run Analysis from the Trigger tab.</div>`;
   } catch(e) { console.error(e); }
 }
+
+// ── LEADS ────────────────────────────────────────────────────
 
 async function loadLeads() {
   try {
@@ -665,20 +744,150 @@ async function loadLeads() {
       : `<div class="empty">No leads yet.</div>`;
   } catch(e) { console.error(e); }
 }
-
 async function setLeadStatus(cid, status) {
   await api("/api/agent/leads","POST",{commentId:cid,status});
   toast("Updated","ok"); loadLeads();
 }
 
+// ── INTELLIGENCE ─────────────────────────────────────────────
+
 async function loadIntel() {
   try {
     const d = await api("/api/agent/intel");
     document.getElementById("intel-wrap").innerHTML = d.brief
-      ? `<div class="intel-brief">${d.brief}</div><p style="font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:10px">Generated: ${d.createdAt ? new Date(d.createdAt).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"}) : "unknown"}</p>`
+      ? `<div class="intel-brief">${d.brief}</div><p style="font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:10px">Generated: ${d.createdAt?new Date(d.createdAt).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"}):"unknown"}</p>`
       : `<div class="empty">No brief yet — click REFRESH BRIEF above.</div>`;
   } catch(e) { console.error(e); }
 }
+
+// ── CAPTION ──────────────────────────────────────────────────
+
+function setPlatform(p) {
+  captionPlatform = p;
+  document.querySelectorAll(".plat-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("plat-"+p).classList.add("active");
+}
+
+function handleFileSelect(file) {
+  if (!file) return;
+  captionFile = file;
+  const preview = document.getElementById("preview-img");
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+  document.getElementById("drop-label").style.display = "none";
+  document.getElementById("file-name").textContent = file.name + " · " + (file.size/1024).toFixed(0) + "KB";
+  document.getElementById("clear-img-btn").style.display = "block";
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById("drop-zone").style.borderColor = "var(--b2)";
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) handleFileSelect(file);
+}
+
+function clearImage() {
+  captionFile = null;
+  document.getElementById("preview-img").style.display = "none";
+  document.getElementById("drop-label").style.display  = "";
+  document.getElementById("file-name").textContent     = "";
+  document.getElementById("clear-img-btn").style.display = "none";
+  document.getElementById("img-input").value = "";
+}
+
+function capTab(platform, btn) {
+  document.querySelectorAll("#cap-result-wrap .ctab").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll("#cap-result-wrap .copy-content").forEach(c => c.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("cap-"+platform).classList.add("active");
+}
+
+async function generateCaption() {
+  const btn = document.getElementById("btn-caption");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span>&nbsp;${captionFile ? "ANALYSING IMAGE..." : "GENERATING..."}`;
+
+  try {
+    const form = new FormData();
+    if (captionFile) form.append("image", captionFile);
+    form.append("hook",         document.getElementById("cap-hook").value.trim());
+    form.append("context",      document.getElementById("cap-context").value.trim());
+    form.append("angle",        document.getElementById("cap-angle").value);
+    form.append("rotationType", document.getElementById("cap-type").value);
+    form.append("platforms",    captionPlatform);
+
+    const res  = await fetch("/api/agent/caption", {
+      method:  "POST",
+      headers: { "x-agent-secret": SECRET },
+      body:    form,
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) { toast(`Error: ${data.error??"Caption failed"}`,"err"); return; }
+
+    captionDraftId = data.draftId;
+
+    // Vision analysis panel (only meaningful when image provided)
+    const a = data.analysis ?? {};
+    if (captionFile && a.subject) {
+      const lines = [
+        `Subject:   ${a.subject}`,
+        `Type:      ${a.imageType??"—"}`,
+        a.platform ? `Platform:  ${a.platform}` : "",
+        `Focus:     ${a.suggestedFocus??"—"}`,
+        a.technicalDetails?.length ? `Technical: ${a.technicalDetails.join(", ")}` : "",
+        a.storyMoments?.length     ? `Story:     ${a.storyMoments.join(" | ")}` : "",
+      ].filter(Boolean).join("\n");
+      document.getElementById("cap-analysis").textContent = lines;
+      document.getElementById("cap-analysis-wrap").style.display = "block";
+    } else {
+      document.getElementById("cap-analysis-wrap").style.display = "none";
+    }
+
+    document.getElementById("cap-fb-text").textContent = data.copy?.facebook  ?? "(not generated)";
+    document.getElementById("cap-ig-text").textContent = data.copy?.instagram ?? "(not generated)";
+
+    // Show/hide tabs based on what was generated
+    const hasFb = !!data.copy?.facebook;
+    const hasIg = !!data.copy?.instagram;
+    document.getElementById("cap-tab-fb").style.display = hasFb ? "" : "none";
+    document.getElementById("cap-tab-ig").style.display = hasIg ? "" : "none";
+    if (!hasFb && hasIg) capTab("ig", document.getElementById("cap-tab-ig"));
+
+    document.getElementById("cap-result-wrap").style.display = "block";
+    toast(`Saved to queue: "${data.topic}"`, "ok");
+
+  } catch(e) {
+    toast(`Error: ${e.message}`,"err");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "GENERATE CAPTIONS";
+  }
+}
+
+async function approveCaption() {
+  if (!captionDraftId) return;
+  if (!confirm("Post this to the selected platforms now?")) return;
+  const btn = document.getElementById("cap-approve-btn");
+  btn.disabled = true; btn.textContent = "POSTING...";
+  const r = await api("/api/agent/publish","POST",{draftId:captionDraftId});
+  if (r.success) { toast("Posted ✓","ok"); resetCaption(); }
+  else { toast(`Error: ${r.error??"Publish failed"}`,"err"); btn.disabled=false; btn.textContent="✓ APPROVE & POST"; }
+}
+
+function resetCaption() {
+  clearImage();
+  captionDraftId = null;
+  document.getElementById("cap-hook").value    = "";
+  document.getElementById("cap-context").value = "";
+  document.getElementById("cap-angle").value   = "";
+  document.getElementById("cap-type").value    = "value";
+  document.getElementById("cap-analysis-wrap").style.display = "none";
+  document.getElementById("cap-result-wrap").style.display   = "none";
+  setPlatform("both");
+}
+
+// ── TRIGGERS ─────────────────────────────────────────────────
 
 async function triggerFire() {
   const btn = document.getElementById("btn-fire");
@@ -686,34 +895,28 @@ async function triggerFire() {
   try {
     const r = await api("/api/agent/fire","POST");
     btn.disabled = false; btn.textContent = "GENERATE NOW";
-    if (r.draftId) {
-      toast(`Draft ready — check Review Queue`, "ok");
-      tab("review", document.querySelector("nav button"));
-    } else {
-      toast(`Error: ${r.error??"Generation failed"}`,"err");
-    }
-  } catch(e) {
-    btn.disabled = false; btn.textContent = "GENERATE NOW";
-    toast(`Error: ${e.message}`,"err");
-  }
+    if (r.draftId) { toast("Draft ready — check Review Queue","ok"); tab("review",document.querySelector("nav button")); }
+    else toast(`Error: ${r.error??"Generation failed"}`,"err");
+  } catch(e) { btn.disabled=false; btn.textContent="GENERATE NOW"; toast(`Error: ${e.message}`,"err"); }
 }
-
 async function triggerAnalyze() {
   toast("Analysing...","info");
-  try { const r = await api("/api/agent/analyze","POST"); toast(r.success?`Analysed ${r.analysed} posts`:`Error: ${r.error}`,r.success?"ok":"err"); } catch(e){toast(e.message,"err");}
+  try { const r=await api("/api/agent/analyze","POST"); toast(r.success?`Analysed ${r.analysed} posts`:`Error: ${r.error}`,r.success?"ok":"err"); } catch(e){toast(e.message,"err");}
 }
 async function triggerScan() {
   toast("Scanning...","info");
-  try { const r = await api("/api/agent/scan","POST"); toast(`${r.scanned??0} scanned · ${r.leadsFound??0} leads`,"ok"); } catch(e){toast(e.message,"err");}
+  try { const r=await api("/api/agent/scan","POST"); toast(`${r.scanned??0} scanned · ${r.leadsFound??0} leads`,"ok"); } catch(e){toast(e.message,"err");}
 }
 async function triggerTrends() {
   toast("Refreshing...","info");
   try {
-    const r = await api("/api/agent/trends","POST");
+    const r=await api("/api/agent/trends","POST");
     toast(r.success?"Brief updated":`Error: ${r.error}`,r.success?"ok":"err");
     if(document.getElementById("tab-intel").classList.contains("active")) loadIntel();
   } catch(e){toast(e.message,"err");}
 }
+
+// ── UTILS ─────────────────────────────────────────────────────
 
 function timeAgo(date) {
   const s = Math.floor((Date.now()-date)/1000);
