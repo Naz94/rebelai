@@ -556,7 +556,6 @@ function draftCard(d, isOpen, isHistory) {
   const rType = d.rotationType ?? ROT_TYPE[d.rotationId] ?? "value";
   const rLbl  = ROT_LABELS[d.rotationId] ?? d.rotationId ?? "";
 
-  // Image: handle DALL-E URL, uploaded buffer, or text-only
   let img;
   if (d.visual?.imageUrl) {
     img = `<img class="draft-image" src="${d.visual.imageUrl}" loading="lazy" />`;
@@ -703,7 +702,7 @@ async function loadOverview() {
 
 async function loadPerf() {
   try {
-    const d = await api("/api/agent/perf");
+    const d = await api("/api/agent/analytics");  // ← FIXED
     const w = d.weights ?? {};
     const valueRotations = [
       {id:"value_react",l:"React Architecture"},{id:"value_perf",l:"Performance Eng."},
@@ -816,7 +815,7 @@ async function generateCaption() {
     form.append("rotationType", document.getElementById("cap-type").value);
     form.append("platforms",    captionPlatform);
 
-    const res  = await fetch("/api/agent/caption", {
+    const res = await fetch("/api/agent/content?action=caption", {  // ← FIXED
       method:  "POST",
       headers: { "x-agent-secret": SECRET },
       body:    form,
@@ -827,7 +826,6 @@ async function generateCaption() {
 
     captionDraftId = data.draftId;
 
-    // Vision analysis panel (only meaningful when image provided)
     const a = data.analysis ?? {};
     if (captionFile && a.subject) {
       const lines = [
@@ -847,7 +845,6 @@ async function generateCaption() {
     document.getElementById("cap-fb-text").textContent = data.copy?.facebook  ?? "(not generated)";
     document.getElementById("cap-ig-text").textContent = data.copy?.instagram ?? "(not generated)";
 
-    // Show/hide tabs based on what was generated
     const hasFb = !!data.copy?.facebook;
     const hasIg = !!data.copy?.instagram;
     document.getElementById("cap-tab-fb").style.display = hasFb ? "" : "none";
@@ -893,7 +890,7 @@ async function triggerFire() {
   const btn = document.getElementById("btn-fire");
   btn.disabled = true; btn.innerHTML = `<span class="spin"></span> GENERATING...`;
   try {
-    const r = await api("/api/agent/fire","POST");
+    const r = await api("/api/agent/content?action=generate","POST");  // ← FIXED
     btn.disabled = false; btn.textContent = "GENERATE NOW";
     if (r.draftId) { toast("Draft ready — check Review Queue","ok"); tab("review",document.querySelector("nav button")); }
     else toast(`Error: ${r.error??"Generation failed"}`,"err");
@@ -901,11 +898,17 @@ async function triggerFire() {
 }
 async function triggerAnalyze() {
   toast("Analysing...","info");
-  try { const r=await api("/api/agent/analyze","POST"); toast(r.success?`Analysed ${r.analysed} posts`:`Error: ${r.error}`,r.success?"ok":"err"); } catch(e){toast(e.message,"err");}
+  try {
+    const r = await api("/api/agent/analytics?action=analyze","POST");  // ← FIXED
+    toast(r.success?`Analysed ${r.analysed} posts`:`Error: ${r.error}`,r.success?"ok":"err");
+  } catch(e){toast(e.message,"err");}
 }
 async function triggerScan() {
   toast("Scanning...","info");
-  try { const r=await api("/api/agent/scan","POST"); toast(`${r.scanned??0} scanned · ${r.leadsFound??0} leads`,"ok"); } catch(e){toast(e.message,"err");}
+  try {
+    const r = await api("/api/agent/analytics?action=scan","POST");  // ← FIXED
+    toast(`${r.scanned??0} scanned · ${r.leadsFound??0} leads`,"ok");
+  } catch(e){toast(e.message,"err");}
 }
 async function triggerTrends() {
   toast("Refreshing...","info");
