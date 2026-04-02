@@ -178,10 +178,36 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
 .hf-btn.active{border-color:var(--red);color:var(--w);}
 .hf-btn:hover{color:var(--w);}
 
-/* ── CAPTION TAB ── */
 .plat-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:10px 16px;background:var(--s1);color:var(--dim2);border:1px solid var(--b1);cursor:pointer;transition:all 0.15s;}
 .plat-btn.active{background:var(--red);color:var(--w);border-color:var(--red);}
 .plat-btn:hover:not(.active){border-color:var(--w);color:var(--w);}
+
+/* ── META FEED ── */
+.platform-tally{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b1);margin-bottom:24px;}
+.pt-cell{background:var(--s1);padding:16px 20px;}
+.pt-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;}
+.pt-label.fb{color:var(--blue);}
+.pt-label.ig{color:var(--amber);}
+.pt-val{font-size:28px;font-weight:300;letter-spacing:-0.02em;}
+.pt-sub{font-size:11px;color:var(--dim);margin-top:4px;}
+.feed-card{background:var(--s1);border:1px solid var(--b1);display:grid;grid-template-columns:72px 1fr;overflow:hidden;margin-bottom:1px;transition:border-color 0.15s;}
+.feed-card:hover{border-color:var(--b2);}
+.feed-card.fb{border-left:3px solid var(--blue);}
+.feed-card.ig{border-left:3px solid var(--amber);}
+.feed-thumb{width:72px;height:72px;object-fit:cover;display:block;}
+.feed-thumb-empty{width:72px;height:72px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.feed-body{padding:10px 16px;display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;}
+.feed-caption{font-size:12px;color:rgba(255,255,255,0.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.feed-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.feed-plat{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;}
+.feed-plat.fb{color:var(--blue);}
+.feed-plat.ig{color:var(--amber);}
+.feed-eng{font-family:var(--mono);font-size:11px;font-weight:700;}
+.feed-eng.high{color:var(--green);}
+.feed-eng.mid{color:var(--amber);}
+.feed-eng.low{color:var(--dim);}
+.feed-stat{font-family:var(--mono);font-size:11px;color:var(--dim2);}
+.feed-date{font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:auto;}
 
 #toast{position:fixed;bottom:24px;right:24px;background:var(--s1);border:1px solid var(--b1);padding:12px 20px;font-family:var(--mono);font-size:11px;letter-spacing:0.08em;z-index:1000;transform:translateY(12px);opacity:0;transition:all 0.25s;pointer-events:none;max-width:320px;}
 #toast.show{transform:translateY(0);opacity:1;}
@@ -230,11 +256,7 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
         <strong style="color:var(--w)">Nothing posts without your approval.</strong>
       </p>
       <div id="queue-list"></div>
-
-      <div class="stitle" style="margin-top:48px">
-        Post History
-        <span class="stitle-count" id="history-count"></span>
-      </div>
+      <div class="stitle" style="margin-top:48px">Post History <span class="stitle-count" id="history-count"></span></div>
       <div class="history-filter">
         <button class="hf-btn active" onclick="filterHistory('all',this)">ALL</button>
         <button class="hf-btn" onclick="filterHistory('published',this)">PUBLISHED</button>
@@ -249,8 +271,10 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
       <div id="last-run-wrap"></div>
       <div class="stitle">Metrics</div>
       <div class="stat-row" id="stats"></div>
-      <div class="stitle" style="margin-top:32px">Recent Posts</div>
+      <div class="stitle" style="margin-top:32px">Recent AI Posts</div>
       <div id="recent-posts-wrap"></div>
+      <div class="stitle" style="margin-top:40px">Live Social Feed</div>
+      <div id="meta-feed-wrap"><div class="empty">Loading feed...</div></div>
     </div>
 
     <!-- PERFORMANCE -->
@@ -278,17 +302,10 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
     <!-- CAPTION -->
     <div class="tab" id="tab-caption">
       <div class="stitle">Custom Caption Generator</div>
-      <p style="font-size:13px;color:var(--dim2);margin-bottom:28px;line-height:1.7">
-        Upload an image (optional), add a hook and context, pick an angle. The engine applies brand voice and saves to the review queue.
-      </p>
-
+      <p style="font-size:13px;color:var(--dim2);margin-bottom:28px;line-height:1.7">Upload an image (optional), add a hook and context, pick an angle. The engine applies brand voice and saves to the review queue.</p>
       <div style="display:grid;grid-template-columns:320px 1fr;gap:32px;align-items:start">
-
-        <!-- Left: image upload -->
         <div>
-          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:10px">
-            Image <span style="color:var(--dim2)">(optional)</span>
-          </div>
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:10px">Image <span style="color:var(--dim2)">(optional)</span></div>
           <div id="drop-zone" style="border:2px dashed var(--b2);width:100%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.2s;position:relative;background:var(--s1);"
                onclick="document.getElementById('img-input').click()"
                ondragover="event.preventDefault();this.style.borderColor='var(--red)'"
@@ -307,24 +324,15 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
             <button id="clear-img-btn" onclick="clearImage()" style="display:none;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;background:none;border:none;color:var(--dim2);cursor:pointer">✕ CLEAR</button>
           </div>
         </div>
-
-        <!-- Right: brief fields -->
         <div style="display:flex;flex-direction:column;gap:20px">
-
           <div>
-            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">
-              Hook / Opening Idea <span style="color:var(--dim2)">(optional)</span>
-            </div>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Hook / Opening Idea <span style="color:var(--dim2)">(optional)</span></div>
             <textarea id="cap-hook" rows="2" placeholder="e.g. The order confirmation was arriving 4 hours after the sale" style="width:100%;background:var(--s1);border:1px solid var(--b1);color:var(--w);font-family:var(--sans);font-size:13px;padding:14px 16px;resize:vertical;outline:none;transition:border-color 0.2s;line-height:1.6;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--b1)'"></textarea>
           </div>
-
           <div>
-            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">
-              Context <span style="color:var(--dim2)">(optional — background the image doesn't show)</span>
-            </div>
-            <textarea id="cap-context" rows="3" placeholder="e.g. This is the QuickShap order tracking view. Built over a weekend. The challenge was state sync under 50ms on 3G." style="width:100%;background:var(--s1);border:1px solid var(--b1);color:var(--w);font-family:var(--sans);font-size:13px;padding:14px 16px;resize:vertical;outline:none;transition:border-color 0.2s;line-height:1.6;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--b1)'"></textarea>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Context <span style="color:var(--dim2)">(optional)</span></div>
+            <textarea id="cap-context" rows="3" placeholder="e.g. This is the QuickShap order tracking view. Built over a weekend." style="width:100%;background:var(--s1);border:1px solid var(--b1);color:var(--w);font-family:var(--sans);font-size:13px;padding:14px 16px;resize:vertical;outline:none;transition:border-color 0.2s;line-height:1.6;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--b1)'"></textarea>
           </div>
-
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div>
               <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Angle Type</div>
@@ -346,7 +354,6 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
               </select>
             </div>
           </div>
-
           <div>
             <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Platforms</div>
             <div style="display:flex;gap:8px">
@@ -355,21 +362,13 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
               <button id="plat-instagram" class="plat-btn"        onclick="setPlatform('instagram')">Instagram</button>
             </div>
           </div>
-
-          <button class="btn btn-primary" id="btn-caption" onclick="generateCaption()" style="width:100%;padding:16px;font-size:11px;letter-spacing:0.2em;justify-content:center">
-            GENERATE CAPTIONS
-          </button>
-
+          <button class="btn btn-primary" id="btn-caption" onclick="generateCaption()" style="width:100%;padding:16px;font-size:11px;letter-spacing:0.2em;justify-content:center">GENERATE CAPTIONS</button>
         </div>
       </div>
-
-      <!-- Vision analysis -->
       <div id="cap-analysis-wrap" style="display:none;margin-top:36px">
         <div class="stitle">Vision Analysis</div>
         <div id="cap-analysis" style="background:var(--s1);border:1px solid var(--b1);padding:20px 24px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.45);line-height:2;white-space:pre-wrap"></div>
       </div>
-
-      <!-- Generated copy -->
       <div id="cap-result-wrap" style="display:none;margin-top:24px">
         <div class="stitle">Generated Copy — Saved to Review Queue</div>
         <div style="background:var(--s1);border:1px solid var(--b1);overflow:hidden">
@@ -389,7 +388,6 @@ main{padding:32px;max-width:1300px;margin:0 auto;}
           <button class="btn btn-ghost"   onclick="resetCaption()">↩ NEW CAPTION</button>
         </div>
       </div>
-
     </div>
 
     <!-- TRIGGER -->
@@ -445,17 +443,15 @@ const ROT_LABELS = {
   value_automation:"Automation",value_sa_context:"SA Context",
   value_builder:"Builder",value_ai_systems:"AI Systems",
   lab_tool:"Lab Tool Showcase",lab_template:"Free Template",
-  lab_infrastructure:"Infrastructure",
-  custom_caption:"Custom Caption"
+  lab_infrastructure:"Infrastructure",custom_caption:"Custom Caption"
 };
 const ROT_TYPE = {
   value_react:"value",value_perf:"value",value_css:"value",value_debug:"value",
   value_micro_lesson:"value",value_hot_take:"value",value_systems:"value",
   value_contrarian:"value",value_rulebook:"value",value_system_breakdown:"value",
   value_automation:"value",value_sa_context:"value",value_builder:"value",
-  value_ai_systems:"value",
-  lab_tool:"lab",lab_template:"lab",lab_infrastructure:"lab",
-  custom_caption:"value"
+  value_ai_systems:"value",lab_tool:"lab",lab_template:"lab",
+  lab_infrastructure:"lab",custom_caption:"value"
 };
 
 function h() { return { "x-agent-secret": SECRET, "Content-Type": "application/json" }; }
@@ -481,17 +477,11 @@ function unlock() {
         init();
       }
     })
-    .catch(() => {
-      document.getElementById("lock-err").style.display = "block";
-      SECRET = "";
-    });
+    .catch(() => { document.getElementById("lock-err").style.display = "block"; SECRET = ""; });
 }
 document.getElementById("pwd").addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
 
-function init() {
-  tick(); setInterval(tick, 1000);
-  loadReview();
-}
+function init() { tick(); setInterval(tick, 1000); loadReview(); }
 function tick() {
   const el = document.getElementById("clock");
   if (el) el.textContent = new Date().toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg",hour12:false});
@@ -513,20 +503,15 @@ function tab(name, btn) {
 
 async function loadReview() {
   try {
-    const data   = await api("/api/agent/drafts");
+    const data  = await api("/api/agent/drafts");
     const drafts = data.drafts ?? [];
     const pending = drafts.filter(d => d.status === "pending");
-    const history = drafts.filter(d => d.status !== "pending")
-                          .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-
+    const history = drafts.filter(d => d.status !== "pending").sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
     const badge = document.getElementById("pending-badge");
-    if (pending.length > 0) { badge.textContent = pending.length; badge.style.display = "inline"; }
-    else badge.style.display = "none";
-
+    if (pending.length > 0) { badge.textContent = pending.length; badge.style.display = "inline"; } else badge.style.display = "none";
     document.getElementById("queue-list").innerHTML = pending.length === 0
       ? `<div class="queue-empty"><p>NO DRAFTS PENDING REVIEW</p><p class="trigger-hint">Go to TRIGGER tab and click GENERATE NOW, or use the CAPTION tab.</p></div>`
       : pending.map(d => draftCard(d, true, false)).join("");
-
     ALL_HISTORY = history;
     renderHistory();
   } catch(e) {
@@ -542,9 +527,7 @@ function filterHistory(filter, btn) {
 }
 
 function renderHistory() {
-  const filtered = CURRENT_FILTER === "all"
-    ? ALL_HISTORY
-    : ALL_HISTORY.filter(d => d.status === CURRENT_FILTER);
+  const filtered = CURRENT_FILTER === "all" ? ALL_HISTORY : ALL_HISTORY.filter(d => d.status === CURRENT_FILTER);
   document.getElementById("history-count").textContent = `${filtered.length} of ${ALL_HISTORY.length}`;
   document.getElementById("history-list").innerHTML = filtered.length === 0
     ? `<div class="empty">No ${CURRENT_FILTER === "all" ? "" : CURRENT_FILTER + " "}posts yet.</div>`
@@ -555,76 +538,46 @@ function draftCard(d, isOpen, isHistory) {
   const dot   = {pending:"dot-pending",approved:"dot-approved",published:"dot-published",rejected:"dot-rejected",failed:"dot-failed"}[d.status] ?? "dot-pending";
   const rType = d.rotationType ?? ROT_TYPE[d.rotationId] ?? "value";
   const rLbl  = ROT_LABELS[d.rotationId] ?? d.rotationId ?? "";
-
   let img;
-  if (d.visual?.imageUrl) {
-    img = `<img class="draft-image" src="${d.visual.imageUrl}" loading="lazy" />`;
-  } else if (d.visual?.buffer) {
-    img = `<img class="draft-image" src="data:${d.visual.mimeType ?? 'image/jpeg'};base64,${d.visual.buffer}" loading="lazy" />`;
-  } else {
-    img = `<div class="draft-image-placeholder">${d.visual?.type === "none" ? "TEXT ONLY" : "NO IMAGE"}</div>`;
-  }
-
-  const createdDate    = d.createdAt   ? new Date(d.createdAt)   : null;
-  const publishedDate  = d.publishedAt ? new Date(d.publishedAt) : null;
-  const formattedDate  = createdDate   ? createdDate.toLocaleDateString("en-ZA",{timeZone:"Africa/Johannesburg",day:"numeric",month:"short",year:"numeric"}) : "";
-  const formattedTime  = createdDate   ? createdDate.toLocaleTimeString("en-ZA",{timeZone:"Africa/Johannesburg",hour:"2-digit",minute:"2-digit",hour12:false}) : "";
-  const formattedPub   = publishedDate ? publishedDate.toLocaleDateString("en-ZA",{timeZone:"Africa/Johannesburg",day:"numeric",month:"short",year:"numeric"}) : null;
-
+  if (d.visual?.imageUrl)   img = `<img class="draft-image" src="${d.visual.imageUrl}" loading="lazy" />`;
+  else if (d.visual?.buffer) img = `<img class="draft-image" src="data:${d.visual.mimeType??'image/jpeg'};base64,${d.visual.buffer}" loading="lazy" />`;
+  else                       img = `<div class="draft-image-placeholder">${d.visual?.type==="none"?"TEXT ONLY":"NO IMAGE"}</div>`;
+  const cd  = d.createdAt   ? new Date(d.createdAt)   : null;
+  const pd  = d.publishedAt ? new Date(d.publishedAt) : null;
+  const fDate = cd ? cd.toLocaleDateString("en-ZA",{timeZone:"Africa/Johannesburg",day:"numeric",month:"short",year:"numeric"}) : "";
+  const fTime = cd ? cd.toLocaleTimeString("en-ZA",{timeZone:"Africa/Johannesburg",hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+  const fPub  = pd ? pd.toLocaleDateString("en-ZA",{timeZone:"Africa/Johannesburg",day:"numeric",month:"short",year:"numeric"}) : null;
   const actions = d.status === "pending"
-    ? `<div class="action-bar">
-        <button class="btn btn-approve" onclick="approveDraft('${d.id}',this)">✓ APPROVE &amp; POST</button>
-        <button class="btn btn-regen"   onclick="regenDraft('${d.id}',this)">↻ REGENERATE</button>
-        <button class="btn btn-reject"  onclick="rejectDraft('${d.id}',this)">✕ REJECT</button>
-       </div>`
-    : `<div class="action-bar">
-        <span class="status-label label-${d.status}">${d.status.toUpperCase()}</span>
-        ${formattedPub ? `<span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Published ${formattedPub}</span>` : ""}
-       </div>`;
-
-  const fbPreview = (d.copy?.facebook ?? "").slice(0,160).replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const historyStrip = isHistory ? `
-    <div class="history-strip">
-      ${d.visual?.imageUrl
-        ? `<img class="hs-img" src="${d.visual.imageUrl}" loading="lazy" />`
-        : d.visual?.buffer
-          ? `<img class="hs-img" src="data:${d.visual.mimeType ?? 'image/jpeg'};base64,${d.visual.buffer}" loading="lazy" />`
-          : `<div class="hs-img-placeholder"></div>`}
-      <div class="hs-copy">${fbPreview}${fbPreview.length >= 160 ? "…" : ""}</div>
-      <span class="hs-status ${d.status}">${d.status.toUpperCase()}</span>
-      <div class="hs-date"><div>${formattedDate}</div><div style="color:var(--dim)">${formattedTime}</div></div>
-    </div>` : "";
-
-  return `
-  <div class="draft-card status-${d.status} type-${rType} ${isOpen?"open":""}" id="dc-${d.id}">
+    ? `<div class="action-bar"><button class="btn btn-approve" onclick="approveDraft('${d.id}',this)">✓ APPROVE &amp; POST</button><button class="btn btn-regen" onclick="regenDraft('${d.id}',this)">↻ REGENERATE</button><button class="btn btn-reject" onclick="rejectDraft('${d.id}',this)">✕ REJECT</button></div>`
+    : `<div class="action-bar"><span class="status-label label-${d.status}">${d.status.toUpperCase()}</span>${fPub?`<span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Published ${fPub}</span>`:""}</div>`;
+  const fbPrev = (d.copy?.facebook??"").slice(0,160).replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const hStrip = isHistory ? `<div class="history-strip">
+    ${d.visual?.imageUrl?`<img class="hs-img" src="${d.visual.imageUrl}" loading="lazy" />`:d.visual?.buffer?`<img class="hs-img" src="data:${d.visual.mimeType??'image/jpeg'};base64,${d.visual.buffer}" loading="lazy" />`:`<div class="hs-img-placeholder"></div>`}
+    <div class="hs-copy">${fbPrev}${fbPrev.length>=160?"…":""}</div>
+    <span class="hs-status ${d.status}">${d.status.toUpperCase()}</span>
+    <div class="hs-date"><div>${fDate}</div><div style="color:var(--dim)">${fTime}</div></div>
+  </div>` : "";
+  return `<div class="draft-card status-${d.status} type-${rType} ${isOpen?"open":""}" id="dc-${d.id}">
     <div class="draft-header" onclick="toggleDraft('${d.id}')">
       <div class="draft-status-dot ${dot}"></div>
-      <div class="draft-topic">${d.topic ?? "Untitled"}</div>
+      <div class="draft-topic">${d.topic??"Untitled"}</div>
       <div class="draft-rotation type-${rType}">${rLbl.toUpperCase()}</div>
-      ${isHistory
-        ? `<div class="draft-meta">${formattedDate}</div>`
-        : `<div class="draft-meta">${d.createdAt ? timeAgo(new Date(d.createdAt)) : ""}</div>`}
+      ${isHistory?`<div class="draft-meta">${fDate}</div>`:`<div class="draft-meta">${d.createdAt?timeAgo(new Date(d.createdAt)):""}</div>`}
       <div class="draft-chevron">▾</div>
     </div>
-    ${historyStrip}
-    <div class="draft-body">
-      <div class="draft-layout">
-        <div class="draft-image-wrap">${img}<div class="image-meta">${d.visual?.styleUsed??""}</div></div>
-        <div>
-          <div class="copy-tabs">
-            <button class="ctab active" onclick="copyTab('${d.id}','fb',this)">FACEBOOK</button>
-            <button class="ctab"        onclick="copyTab('${d.id}','ig',this)">INSTAGRAM</button>
-          </div>
-          <div class="copy-content active" id="ct-${d.id}-fb">
-            <div class="copy-box"><div class="copy-box-label">Facebook Post</div><p>${escHtml(d.copy?.facebook??"")}</p></div>
-          </div>
-          <div class="copy-content" id="ct-${d.id}-ig">
-            <div class="copy-box"><div class="copy-box-label">Instagram Caption</div><p>${escHtml(d.copy?.instagram??"")}</p></div>
-          </div>
-          ${actions}
+    ${hStrip}
+    <div class="draft-body"><div class="draft-layout">
+      <div class="draft-image-wrap">${img}<div class="image-meta">${d.visual?.styleUsed??""}</div></div>
+      <div>
+        <div class="copy-tabs">
+          <button class="ctab active" onclick="copyTab('${d.id}','fb',this)">FACEBOOK</button>
+          <button class="ctab"        onclick="copyTab('${d.id}','ig',this)">INSTAGRAM</button>
         </div>
+        <div class="copy-content active" id="ct-${d.id}-fb"><div class="copy-box"><div class="copy-box-label">Facebook Post</div><p>${escHtml(d.copy?.facebook??"")}</p></div></div>
+        <div class="copy-content"        id="ct-${d.id}-ig"><div class="copy-box"><div class="copy-box-label">Instagram Caption</div><p>${escHtml(d.copy?.instagram??"")}</p></div></div>
+        ${actions}
       </div>
-    </div>
+    </div></div>
   </div>`;
 }
 
@@ -643,7 +596,7 @@ async function approveDraft(id, btn) {
   btn.disabled = true; btn.textContent = "POSTING...";
   try {
     const r = await api("/api/agent/publish","POST",{draftId:id});
-    toast(r.success ? "Posted to FB + IG ✓" : `Error: ${r.error}`, r.success?"ok":"err");
+    toast(r.success?"Posted to FB + IG ✓":`Error: ${r.error}`,r.success?"ok":"err");
     loadReview();
   } catch(e) { toast(`Error: ${e.message}`,"err"); btn.disabled=false; btn.textContent="✓ APPROVE & POST"; }
 }
@@ -651,7 +604,7 @@ async function regenDraft(id, btn) {
   btn.disabled = true; btn.textContent = "REGENERATING...";
   try {
     const r = await api("/api/agent/draft","POST",{draftId:id,action:"regenerate"});
-    toast(r.success ? "New copy ready" : `Error: ${r.error}`, r.success?"ok":"err");
+    toast(r.success?"New copy ready":`Error: ${r.error}`,r.success?"ok":"err");
     loadReview();
   } catch(e) { toast(`Error: ${e.message}`,"err"); btn.disabled=false; btn.textContent="↻ REGENERATE"; }
 }
@@ -669,17 +622,20 @@ async function loadOverview() {
     const d  = await api("/api/agent/status");
     const lr = d.lastRun;
     const m  = d.metrics ?? {};
+
     document.getElementById("last-run-wrap").innerHTML = lr ? `
       <div class="last-run">
         <div class="badge draft">${lr.status??""}</div>
         <div><div style="font-size:13px;font-weight:500">${lr.rotation??""}</div><div style="font-size:11px;color:var(--dim);margin-top:2px">${lr.topic??""}</div></div>
         <div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim)">${lr.timestamp?new Date(lr.timestamp).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"}):""}</div>
       </div>` : "";
+
     document.getElementById("stats").innerHTML = `
       <div class="stat"><div class="stat-l">Published</div><div class="stat-v">${m.totalPosts??0}</div></div>
       <div class="stat"><div class="stat-l">Avg Score</div><div class="stat-v">${m.avgScore??"—"}</div><div class="stat-s">out of 100</div></div>
       <div class="stat"><div class="stat-l">Hot Leads</div><div class="stat-v" style="color:var(--red)">${m.hotLeads??0}</div><div class="stat-s">score 4–5</div></div>
       <div class="stat"><div class="stat-l">All Leads</div><div class="stat-v">${m.leadsFound??0}</div></div>`;
+
     const posts = d.recentPosts ?? [];
     document.getElementById("recent-posts-wrap").innerHTML = posts.length === 0
       ? `<div class="empty">No published posts yet.</div>`
@@ -695,14 +651,63 @@ async function loadOverview() {
             <div style="font-family:var(--mono);font-size:10px;color:var(--dim);flex-shrink:0">${p.publishedAt?timeAgo(new Date(p.publishedAt)):"—"}</div>
           </div>`;
         }).join("");
+
+    renderMetaFeed(d.metaFeed ?? {});
   } catch(e) { console.error(e); }
+}
+
+function renderMetaFeed(feed) {
+  const wrap = document.getElementById("meta-feed-wrap");
+  if (!wrap) return;
+
+  const topPerformers = feed.topPerformers;
+  const facebook      = feed.facebook  ?? [];
+  const instagram     = feed.instagram ?? [];
+
+  if (!topPerformers) {
+    wrap.innerHTML = `<div class="empty">No feed data — check META_TOKEN, FACEBOOK_PAGE_ID and IG_USER_ID in Vercel env vars.</div>`;
+    return;
+  }
+
+  const fbTotal = facebook.reduce((s, p)  => s + p.likes + p.comments, 0);
+  const igTotal = instagram.reduce((s, p) => s + p.likes + p.comments, 0);
+
+  const tally = `<div class="platform-tally">
+    <div class="pt-cell"><div class="pt-label fb">Facebook</div><div class="pt-val">${fbTotal}</div><div class="pt-sub">total engagement · ${facebook.length} posts</div></div>
+    <div class="pt-cell"><div class="pt-label ig">Instagram</div><div class="pt-val">${igTotal}</div><div class="pt-sub">total engagement · ${instagram.length} posts</div></div>
+  </div>`;
+
+  const cards = topPerformers.length === 0
+    ? `<div class="empty">No posts found on connected accounts.</div>`
+    : topPerformers.map(p => {
+        const eng      = p.likes + p.comments;
+        const platCls  = p.platform === "instagram" ? "ig" : "fb";
+        const engCls   = eng > 20 ? "high" : eng > 5 ? "mid" : "low";
+        const capShort = (p.caption ?? "No caption").slice(0, 140).replace(/</g,"&lt;");
+        const dateStr  = p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-ZA",{timeZone:"Africa/Johannesburg",day:"numeric",month:"short"}) : "";
+        return `<div class="feed-card ${platCls}">
+          ${p.imageUrl ? `<img class="feed-thumb" src="${p.imageUrl}" loading="lazy" />` : `<div class="feed-thumb-empty">📷</div>`}
+          <div class="feed-body">
+            <div class="feed-caption">${capShort}${capShort.length >= 140 ? "…" : ""}</div>
+            <div class="feed-meta">
+              <span class="feed-plat ${platCls}">${p.platform.toUpperCase()}</span>
+              <span class="feed-eng ${engCls}">${eng} eng</span>
+              <span class="feed-stat">♥ ${p.likes}</span>
+              <span class="feed-stat">💬 ${p.comments}</span>
+              <span class="feed-date">${dateStr}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+
+  wrap.innerHTML = tally + cards;
 }
 
 // ── PERFORMANCE ─────────────────────────────────────────────
 
 async function loadPerf() {
   try {
-    const d = await api("/api/agent/analytics");  // ← FIXED
+    const d = await api("/api/agent/analytics");
     const w = d.weights ?? {};
     const valueRotations = [
       {id:"value_react",l:"React Architecture"},{id:"value_perf",l:"Performance Eng."},
@@ -714,8 +719,7 @@ async function loadPerf() {
       {id:"value_builder",l:"Builder"},{id:"value_ai_systems",l:"AI Systems"},
     ];
     const labRotations = [
-      {id:"lab_tool",l:"Lab Tool Showcase"},{id:"lab_template",l:"Free Template"},
-      {id:"lab_infrastructure",l:"Infrastructure"},
+      {id:"lab_tool",l:"Lab Tool Showcase"},{id:"lab_template",l:"Free Template"},{id:"lab_infrastructure",l:"Infrastructure"},
     ];
     let html = `<div class="perf-group-label value">Pure Value — 70% target</div>`;
     html += valueRotations.map(r => `<div class="perf-row"><div class="perf-label">${r.l}</div><div class="perf-track"><div class="perf-fill-value" style="width:${w[r.id]??50}%"></div></div><div class="perf-val">${w[r.id]??50}</div></div>`).join("");
@@ -766,7 +770,6 @@ function setPlatform(p) {
   document.querySelectorAll(".plat-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("plat-"+p).classList.add("active");
 }
-
 function handleFileSelect(file) {
   if (!file) return;
   captionFile = file;
@@ -777,14 +780,12 @@ function handleFileSelect(file) {
   document.getElementById("file-name").textContent = file.name + " · " + (file.size/1024).toFixed(0) + "KB";
   document.getElementById("clear-img-btn").style.display = "block";
 }
-
 function handleDrop(e) {
   e.preventDefault();
   document.getElementById("drop-zone").style.borderColor = "var(--b2)";
   const file = e.dataTransfer.files[0];
   if (file && file.type.startsWith("image/")) handleFileSelect(file);
 }
-
 function clearImage() {
   captionFile = null;
   document.getElementById("preview-img").style.display = "none";
@@ -793,19 +794,16 @@ function clearImage() {
   document.getElementById("clear-img-btn").style.display = "none";
   document.getElementById("img-input").value = "";
 }
-
 function capTab(platform, btn) {
   document.querySelectorAll("#cap-result-wrap .ctab").forEach(b => b.classList.remove("active"));
   document.querySelectorAll("#cap-result-wrap .copy-content").forEach(c => c.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById("cap-"+platform).classList.add("active");
 }
-
 async function generateCaption() {
   const btn = document.getElementById("btn-caption");
   btn.disabled = true;
   btn.innerHTML = `<span class="spin"></span>&nbsp;${captionFile ? "ANALYSING IMAGE..." : "GENERATING..."}`;
-
   try {
     const form = new FormData();
     if (captionFile) form.append("image", captionFile);
@@ -814,54 +812,31 @@ async function generateCaption() {
     form.append("angle",        document.getElementById("cap-angle").value);
     form.append("rotationType", document.getElementById("cap-type").value);
     form.append("platforms",    captionPlatform);
-
-    const res = await fetch("/api/agent/content?action=caption", {  // ← FIXED
-      method:  "POST",
-      headers: { "x-agent-secret": SECRET },
-      body:    form,
+    const res = await fetch("/api/agent/content?action=caption", {
+      method: "POST", headers: { "x-agent-secret": SECRET }, body: form,
     });
     const data = await res.json();
-
     if (!res.ok || data.error) { toast(`Error: ${data.error??"Caption failed"}`,"err"); return; }
-
     captionDraftId = data.draftId;
-
     const a = data.analysis ?? {};
     if (captionFile && a.subject) {
-      const lines = [
-        `Subject:   ${a.subject}`,
-        `Type:      ${a.imageType??"—"}`,
-        a.platform ? `Platform:  ${a.platform}` : "",
-        `Focus:     ${a.suggestedFocus??"—"}`,
-        a.technicalDetails?.length ? `Technical: ${a.technicalDetails.join(", ")}` : "",
-        a.storyMoments?.length     ? `Story:     ${a.storyMoments.join(" | ")}` : "",
-      ].filter(Boolean).join("\n");
+      const lines = [`Subject:   ${a.subject}`,`Type:      ${a.imageType??"—"}`,a.platform?`Platform:  ${a.platform}`:"",`Focus:     ${a.suggestedFocus??"—"}`,a.technicalDetails?.length?`Technical: ${a.technicalDetails.join(", ")}`:"",a.storyMoments?.length?`Story:     ${a.storyMoments.join(" | ")}`:""].filter(Boolean).join("\n");
       document.getElementById("cap-analysis").textContent = lines;
       document.getElementById("cap-analysis-wrap").style.display = "block";
     } else {
       document.getElementById("cap-analysis-wrap").style.display = "none";
     }
-
     document.getElementById("cap-fb-text").textContent = data.copy?.facebook  ?? "(not generated)";
     document.getElementById("cap-ig-text").textContent = data.copy?.instagram ?? "(not generated)";
-
-    const hasFb = !!data.copy?.facebook;
-    const hasIg = !!data.copy?.instagram;
+    const hasFb = !!data.copy?.facebook, hasIg = !!data.copy?.instagram;
     document.getElementById("cap-tab-fb").style.display = hasFb ? "" : "none";
     document.getElementById("cap-tab-ig").style.display = hasIg ? "" : "none";
     if (!hasFb && hasIg) capTab("ig", document.getElementById("cap-tab-ig"));
-
     document.getElementById("cap-result-wrap").style.display = "block";
     toast(`Saved to queue: "${data.topic}"`, "ok");
-
-  } catch(e) {
-    toast(`Error: ${e.message}`,"err");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "GENERATE CAPTIONS";
-  }
+  } catch(e) { toast(`Error: ${e.message}`,"err"); }
+  finally { btn.disabled = false; btn.textContent = "GENERATE CAPTIONS"; }
 }
-
 async function approveCaption() {
   if (!captionDraftId) return;
   if (!confirm("Post this to the selected platforms now?")) return;
@@ -871,14 +846,12 @@ async function approveCaption() {
   if (r.success) { toast("Posted ✓","ok"); resetCaption(); }
   else { toast(`Error: ${r.error??"Publish failed"}`,"err"); btn.disabled=false; btn.textContent="✓ APPROVE & POST"; }
 }
-
 function resetCaption() {
-  clearImage();
-  captionDraftId = null;
-  document.getElementById("cap-hook").value    = "";
+  clearImage(); captionDraftId = null;
+  document.getElementById("cap-hook").value = "";
   document.getElementById("cap-context").value = "";
-  document.getElementById("cap-angle").value   = "";
-  document.getElementById("cap-type").value    = "value";
+  document.getElementById("cap-angle").value = "";
+  document.getElementById("cap-type").value = "value";
   document.getElementById("cap-analysis-wrap").style.display = "none";
   document.getElementById("cap-result-wrap").style.display   = "none";
   setPlatform("both");
@@ -890,7 +863,7 @@ async function triggerFire() {
   const btn = document.getElementById("btn-fire");
   btn.disabled = true; btn.innerHTML = `<span class="spin"></span> GENERATING...`;
   try {
-    const r = await api("/api/agent/content?action=generate","POST");  // ← FIXED
+    const r = await api("/api/agent/content?action=generate","POST");
     btn.disabled = false; btn.textContent = "GENERATE NOW";
     if (r.draftId) { toast("Draft ready — check Review Queue","ok"); tab("review",document.querySelector("nav button")); }
     else toast(`Error: ${r.error??"Generation failed"}`,"err");
@@ -898,17 +871,11 @@ async function triggerFire() {
 }
 async function triggerAnalyze() {
   toast("Analysing...","info");
-  try {
-    const r = await api("/api/agent/analytics?action=analyze","POST");  // ← FIXED
-    toast(r.success?`Analysed ${r.analysed} posts`:`Error: ${r.error}`,r.success?"ok":"err");
-  } catch(e){toast(e.message,"err");}
+  try { const r=await api("/api/agent/analytics?action=analyze","POST"); toast(r.success?`Analysed ${r.analysed} posts`:`Error: ${r.error}`,r.success?"ok":"err"); } catch(e){toast(e.message,"err");}
 }
 async function triggerScan() {
   toast("Scanning...","info");
-  try {
-    const r = await api("/api/agent/analytics?action=scan","POST");  // ← FIXED
-    toast(`${r.scanned??0} scanned · ${r.leadsFound??0} leads`,"ok");
-  } catch(e){toast(e.message,"err");}
+  try { const r=await api("/api/agent/analytics?action=scan","POST"); toast(`${r.scanned??0} scanned · ${r.leadsFound??0} leads`,"ok"); } catch(e){toast(e.message,"err");}
 }
 async function triggerTrends() {
   toast("Refreshing...","info");
