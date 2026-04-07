@@ -6,6 +6,7 @@
   "dependencies": {
     "@octokit/rest": "^20.1.1",
     "@upstash/redis": "^1.31.0",
+    "@vercel/blob": "^0.23.4",
     "openai": "^4.52.0"
   }
 }
