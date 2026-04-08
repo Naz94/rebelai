@@ -1,7 +1,5 @@
 // ============================================================
-// REBEL ENGINE — Content Router
-//
-// Replaces: fire.js, caption.js
+// REBEL ENGINE — Content Router (api/agent/content.js)
 //
 // Routes via ?action= query param:
 //   POST/GET ?action=generate  — fire the AI content engine (cron or dashboard)
@@ -9,16 +7,16 @@
 //   POST/GET (no action)       — same as generate (backwards compat)
 // ============================================================
 
-import { getPostedTopics, saveLastRun }             from "../../lib/kv.js";
-import { getWeightedRotation, pickAngle, pickHookStyle } from "../../lib/rotations.js";
-import { generateCopy, extractTopic }               from "../../lib/generate.js";
-import { generateVisual }                           from "../../lib/visual.js";
-import { fetchResourceSnapshot }                    from "../../lib/resources.js";
-import { getRotationWeights }                       from "../../lib/performance.js";
-import { getIntelligenceBrief }                     from "../../lib/trends.js";
-import { saveDraft }                                from "../../lib/drafts.js";
-import { generateCaptionFromImage }                 from "../../lib/caption.js";
-import { requireAuth }                              from "../../lib/auth.js";
+import { getPostedTopics, saveLastRun }                  from "../../lib/kv.js";
+import { getWeightedRotation, pickAngle, pickHookStyle }  from "../../lib/rotations.js";
+import { generateCopy, extractTopic }                     from "../../lib/generate.js";
+import { generateVisual }                                 from "../../lib/visual.js";
+import { fetchResourceSnapshot }                          from "../../lib/resources.js";
+import { getRotationWeights }                             from "../../lib/performance.js";
+import { getIntelligenceBrief }                           from "../../lib/trends.js";
+import { saveDraft }                                      from "../../lib/drafts.js";
+import { generateCaptionFromImage }                       from "../../lib/caption.js";
+import { requireAuth }                                    from "../../lib/auth.js";
 
 export const maxDuration = 60;
 
@@ -43,7 +41,7 @@ export default async function handler(req, res) {
   // ── GENERATE — AI content engine ─────────────────────────
   if (!isCron && req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   if (!isCron && !requireAuth(req, res)) return;
-  return handleGenerate(req, res, isCron);
+  return handleGenerate(req, res);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -72,9 +70,10 @@ async function handleGenerate(req, res) {
     const facebookCopy  = fbResult.copy;
     const instagramCopy = igResult.copy;
 
+    // runId passed so the Blob filename is traceable (rebelai/visuals/RD-{ts}-{style}.png)
     const [topic, visual] = await Promise.all([
       extractTopic(facebookCopy),
-      generateVisual(rotation, facebookCopy),
+      generateVisual(rotation, facebookCopy, runId),
     ]);
 
     const draft = await saveDraft({
@@ -91,6 +90,7 @@ async function handleGenerate(req, res) {
         styleUsed: visual.styleUsed,
         imageUrl:  visual.imageUrl ?? null,
         mimeType:  visual.mimeType ?? "image/png",
+        // buffer intentionally omitted — Blob URL is the source of truth for AI-generated drafts
       },
       status:    "pending",
       createdAt: new Date().toISOString(),
@@ -138,6 +138,8 @@ async function handleCaption(req, res) {
       platforms,
     });
 
+    // Caption uploads: store buffer as base64 for Facebook fallback.
+    // imageUrl may be null here — post.js handles that gracefully.
     const visual = imageFile
       ? {
           type:      "uploaded",
