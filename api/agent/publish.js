@@ -21,7 +21,20 @@ export default async function handler(req, res) {
   if (!draft)                       return res.status(404).json({ error: "Draft not found" });
   if (draft.status === "published") return res.status(409).json({ error: "Already published" });
 
+  // Mark as approved before attempting to post
   await updateDraft(draftId, { status: "approved" });
+
+  // Validate required copy exists
+  if (!draft.copy?.facebook && !draft.copy?.instagram) {
+    await updateDraft(draftId, { status: "failed", error: "No copy found on draft" });
+    return res.status(400).json({ error: "Draft has no copy to publish" });
+  }
+
+  // Validate visual exists
+  if (!draft.visual) {
+    await updateDraft(draftId, { status: "failed", error: "No visual found on draft" });
+    return res.status(400).json({ error: "Draft has no visual to publish" });
+  }
 
   try {
     const platformResults = await postToAllPlatforms(draft.copy, draft.visual);
@@ -34,20 +47,57 @@ export default async function handler(req, res) {
 
     console.log(`[publish] Status: ${status} — FB: ${fbData?.postId ?? fbData?.error} — IG: ${igData?.postId ?? igData?.error}`);
 
+    // Register successful posts for analytics — non-fatal if these fail
+    const registrations = [];
+
     if (fbData?.postId) {
-      await registerPublishedPost({ postId: fbData.postId, platform: "facebook", rotationId: draft.rotationId, runId: draft.runId, hookStyle: draft.hookStyle ?? null, angle: draft.angle ?? null });
-    }
-    if (igData?.postId) {
-      await registerPublishedPost({ postId: igData.postId, platform: "instagram", rotationId: draft.rotationId, runId: draft.runId, hookStyle: draft.hookStyle ?? null, angle: draft.angle ?? null });
-    }
-    if (succeeded.length > 0) {
-      await savePostedTopic({ topic: draft.topic, rotation: draft.rotation, rotationId: draft.rotationId, angle: draft.angle ?? null, date: new Date().toISOString() });
+      registrations.push(
+        registerPublishedPost({
+          postId:     fbData.postId,
+          platform:   "facebook",
+          rotationId: draft.rotationId,
+          runId:      draft.runId,
+          hookStyle:  draft.hookStyle ?? null,
+          angle:      draft.angle     ?? null,
+        }).catch(err => console.warn("[publish] FB registration failed:", err.message))
+      );
     }
 
-    await updateDraft(draftId, { status, publishedAt: new Date().toISOString(), platformResults });
+    if (igData?.postId) {
+      registrations.push(
+        registerPublishedPost({
+          postId:     igData.postId,
+          platform:   "instagram",
+          rotationId: draft.rotationId,
+          runId:      draft.runId,
+          hookStyle:  draft.hookStyle ?? null,
+          angle:      draft.angle     ?? null,
+        }).catch(err => console.warn("[publish] IG registration failed:", err.message))
+      );
+    }
+
+    if (succeeded.length > 0) {
+      registrations.push(
+        savePostedTopic({
+          topic:      draft.topic,
+          rotation:   draft.rotation,
+          rotationId: draft.rotationId,
+          angle:      draft.angle ?? null,
+          date:       new Date().toISOString(),
+        }).catch(err => console.warn("[publish] savePostedTopic failed:", err.message))
+      );
+    }
+
+    await Promise.allSettled(registrations);
+
+    await updateDraft(draftId, {
+      status,
+      publishedAt:     new Date().toISOString(),
+      platformResults,
+    });
 
     return res.status(200).json({
-      success: succeeded.length > 0,
+      success:   succeeded.length > 0,
       status,
       facebook:  fbData,
       instagram: igData,
