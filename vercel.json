@@ -7,12 +7,16 @@
   ],
   "crons": [
     {
-      "path": "/api/agent/fire",
+      "path": "/api/agent/content",
       "schedule": "0 6 * * 2,5"
     },
     {
       "path": "/api/agent/trends",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/agent/analytics?action=analyze",
+      "schedule": "0 */6 * * *"
     }
   ]
 }
