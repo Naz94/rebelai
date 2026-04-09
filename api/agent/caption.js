@@ -175,3 +175,4 @@ function indexOfBuffer(haystack, needle, offset = 0) {
   }
   return -1;
 }
+
