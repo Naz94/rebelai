@@ -1,5 +1,5 @@
 // ============================================================
-// REBEL ENGINE — Analytics Router
+// REBEL ENGINE — Analytics Router (api/agent/analytics.js)
 //
 // Routes via ?action= query param:
 //   POST/GET ?action=analyze  — run performance brain (cron or dashboard)
@@ -56,7 +56,6 @@ export default async function handler(req, res) {
 
   // ── PERF — return weights + top posts (dashboard default) ─
   if (!requireAuth(req, res)) return;
-
   try {
     const [weights, scores] = await Promise.all([
       getRotationWeights(),
@@ -78,7 +77,4 @@ export default async function handler(req, res) {
     console.error("[analytics] perf failed:", err.message);
     return res.status(500).json({ error: err.message });
   }
-}
-
-  return res.status(200).json({ weights, topPosts });
 }
