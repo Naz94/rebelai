@@ -9,7 +9,7 @@
 
 import { getPostedTopics, saveLastRun }                  from "../../lib/kv.js";
 import { getWeightedRotation, pickAngle, pickHookStyle }  from "../../lib/rotations.js";
-import { generateCopy, extractTopic }                     from "../../lib/generate.js";
+import { generateCopy, extractTopic, adaptForInstagram }  from "../../lib/generate.js";
 import { generateVisual }                                 from "../../lib/visual.js";
 import { fetchResourceSnapshot }                          from "../../lib/resources.js";
 import { getRotationWeights }                             from "../../lib/performance.js";
@@ -62,13 +62,12 @@ async function handleGenerate(req, res) {
     const angle     = pickAngle(rotation, postHistory);
     const hookStyle = pickHookStyle(rotation);
 
-    const [fbResult, igResult] = await Promise.all([
-      generateCopy(rotation, "facebook",  resourceSnapshot, postHistory, intelligenceBrief, { angle, hookStyle }),
-      generateCopy(rotation, "instagram", resourceSnapshot, postHistory, intelligenceBrief, { angle, hookStyle }),
-    ]);
-
-    const facebookCopy  = fbResult.copy;
-    const instagramCopy = igResult.copy;
+    // Generate Facebook copy once — single source of truth.
+    // Instagram copy is adapted from it via gpt-4o-mini (same message,
+    // compressed to ≤100 words, 25 hashtags appended).
+    const fbResult     = await generateCopy(rotation, "facebook", resourceSnapshot, postHistory, intelligenceBrief, { angle, hookStyle });
+    const facebookCopy = fbResult.copy;
+    const instagramCopy = await adaptForInstagram(facebookCopy);
 
     // runId passed so the Blob filename is traceable (rebelai/visuals/RD-{ts}-{style}.png)
     const [topic, visual] = await Promise.all([
@@ -128,6 +127,10 @@ async function handleCaption(req, res) {
     const rotationType = formData.rotationType ?? "value";
     const platforms    = formData.platforms    ?? "both";
 
+    // generateCaptionFromImage handles Facebook copy generation.
+    // If both platforms are requested, Instagram is adapted from the
+    // Facebook output via adaptForInstagram — same message, not a
+    // second independent generation.
     const result = await generateCaptionFromImage({
       imageBuffer:   imageFile?.buffer   ?? null,
       imageMimeType: imageFile?.mimeType ?? "image/jpeg",
