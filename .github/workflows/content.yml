@@ -1,11 +1,8 @@
 name: Content Generation
-
 on:
-  schedule:
-    # Tuesdays and Fridays at 06:00 UTC
-    - cron: "0 6 * * 2,5"
+  # schedule:
+  #   - cron: "0 6 * * 2,5"
   workflow_dispatch:
-
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -17,10 +14,8 @@ jobs:
             -H "x-agent-secret: ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             "https://rebelai-taupe.vercel.app/api/agent/content?action=generate")
-
           echo "Status: $HTTP_STATUS"
           cat /tmp/response.json
-
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Content generation failed"
             exit 1
