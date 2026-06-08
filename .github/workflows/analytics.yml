@@ -1,11 +1,8 @@
 name: Analytics
-
 on:
-  schedule:
-    # Every 6 hours — analyze performance + scan leads
-    - cron: "0 */6 * * *"
+  # schedule:
+  #   - cron: "0 */6 * * *"
   workflow_dispatch:
-
 jobs:
   analyze:
     runs-on: ubuntu-latest
@@ -17,15 +14,12 @@ jobs:
             -H "x-agent-secret: ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             "https://rebelai-taupe.vercel.app/api/agent/analytics?action=analyze")
-
           echo "Status: $HTTP_STATUS"
           cat /tmp/analyze.json
-
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Performance analysis failed"
             exit 1
           fi
-
       - name: Run lead scanner
         run: |
           HTTP_STATUS=$(curl -s -o /tmp/scan.json -w "%{http_code}" \
@@ -33,10 +27,8 @@ jobs:
             -H "x-agent-secret: ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             "https://rebelai-taupe.vercel.app/api/agent/analytics?action=scan")
-
           echo "Status: $HTTP_STATUS"
           cat /tmp/scan.json
-
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Lead scan failed"
             exit 1
